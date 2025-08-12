@@ -1,0 +1,20 @@
+CAMK2D PIPELINE VALIDATION REPORT
+==================================
+Generated: 2025-08-12 18:19:20.318049
+Overall Status: PASSED
+Overall Score: 100 %
+
+COMPONENT SCORES:
+• Module Loading: 100 %
+• Function Availability: 100 %
+• Package Dependencies: 100 %
+
+SUMMARY:
+• Modules loaded: 4 / 4
+• Functions available: 8 / 8
+• Packages available: 10 / 10
+• CAMK genes configured: 10
+• Datasets configured: 11
+
+NEXT STEPS:
+✅ Pipeline ready - execute: Rscript run_pipeline.R
