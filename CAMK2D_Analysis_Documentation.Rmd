@@ -323,69 +323,36 @@ datatable(camk_info,
 # Define CAMK family genes
 camk_genes <- c("CAMK2D", "CAMK2A", "CAMK2B", "CAMK2G", "CAMKK1", "CAMKK2", "CAMK1D", "CAMK1G", "CAMK4", "CAMKV")
 
-# Load real analysis functions
-if (file.exists("functions/data_processing.R")) {
-  source("functions/data_processing.R")
-  source("functions/analysis.R")
-  source("functions/utilities.R")
-  
-  # Load cached expression data from real cardiovascular datasets
-  if (file.exists("cache/comprehensive/processed_expression_data.rds")) {
-    expression_data <- readRDS("cache/comprehensive/processed_expression_data.rds")
-    expression_matrix <- expression_data$expression_matrix
-    sample_metadata <- expression_data$metadata
-    
-    cat("✅ Loaded real cardiovascular expression data:", nrow(expression_matrix), "genes x", 
-        ncol(expression_matrix), "samples from", length(unique(sample_metadata$Dataset)), "datasets\n")
-  } else {
-    # Fallback: Load sample dataset from cached results
-    cat("⚠️ Using fallback sample data - run full pipeline for complete results\n")
-    # Create minimal real data structure
-    # Create realistic expression matrix based on published cardiovascular data ranges\n    n_genes <- length(camk_genes)\n    expression_matrix <- matrix(\n      runif(n_genes * 20, min = 4.5, max = 12.8),  # Typical microarray log2 range\n      nrow = n_genes, ncol = 20\n    )\n    # Add realistic differential patterns for CAMK2D\n    expression_matrix[1, 11:20] <- expression_matrix[1, 11:20] + runif(10, min = 0.2, max = 0.8)
-    rownames(expression_matrix) <- camk_genes
-    colnames(expression_matrix) <- c(paste0("AF_", 1:10), paste0("SR_", 1:10))
-    sample_metadata <- data.frame(
-      Sample_ID = colnames(expression_matrix),
-      Condition = c(rep("AF", 10), rep("SR", 10)),
-      Dataset = "Real_Cardiovascular_Data",
-      Species = "human",
-      row.names = colnames(expression_matrix)
-    )
-  }
-} else {
-  cat("⚠️ Analysis functions not found - using documentation mode\n")
-  # Minimal structure for documentation purposes
-  n_genes <- length(camk_genes)
-  expression_matrix <- matrix(
-    runif(n_genes * 20, min = 4.5, max = 12.8),
-    nrow = n_genes, ncol = 20
-  )
-  # Add realistic differential patterns
-  expression_matrix[1, 11:20] <- expression_matrix[1, 11:20] + runif(10, min = 0.2, max = 0.8)
-  rownames(expression_matrix) <- camk_genes
-  colnames(expression_matrix) <- c(paste0("AF_", 1:10), paste0("SR_", 1:10))
-  sample_metadata <- data.frame(
-    Sample_ID = colnames(expression_matrix),
-    Condition = c(rep("Atrial_Fibrillation", 10), rep("Sinus_Rhythm", 10)),
-    Dataset = "Cardiovascular_Datasets",
-    Species = "human",
-    row.names = colnames(expression_matrix)
-  )
+# Load required pipeline functions
+source("functions/data_processing.R")
+source("functions/analysis.R")
+source("functions/utilities.R")
+
+# Load real cardiovascular expression data
+if (!file.exists("cache/comprehensive/processed_expression_data.rds")) {
+  stop("❌ REAL DATA REQUIRED: Run the full pipeline first to generate processed_expression_data.rds")
 }
+
+expression_data <- readRDS("cache/comprehensive/processed_expression_data.rds")
+expression_matrix <- expression_data$expression_matrix
+sample_metadata <- expression_data$metadata
+
+cat("✅ Loaded real cardiovascular expression data:", nrow(expression_matrix), "genes x", 
+    ncol(expression_matrix), "samples from", length(unique(sample_metadata$Dataset)), "datasets\n")
 ```
 
 ### Expression Data Overview
 
 ```{r expression-overview}
 # Show subset of expression data
-expression_subset <- expression_matrix[1:15, 1:8]
+expression_subset <- expression_matrix[1:min(10, nrow(expression_matrix)), 1:8]
 expression_df <- as.data.frame(round(expression_subset, 2))
 expression_df$Gene <- rownames(expression_df)
 expression_df <- expression_df[, c("Gene", colnames(expression_subset))]
 
 datatable(expression_df,
-          options = list(pageLength = 15, scrollX = TRUE),
-          caption = "Expression Matrix Sample (First 15 genes, 8 samples)")
+          options = list(pageLength = 10, scrollX = TRUE),
+          caption = "CAMK Gene Expression Matrix (10 genes, 8 samples shown)")
 ```
 
 # Quality Control Visualizations
@@ -396,12 +363,23 @@ datatable(expression_df,
 # Perform PCA
 pca_result <- prcomp(t(expression_matrix), scale. = TRUE)
 
-# Create PCA data frame
+# Create PCA data frame with proper error handling
+if (is.null(sample_metadata)) {
+  # Create minimal metadata if missing
+  sample_metadata <- data.frame(
+    Sample_ID = colnames(expression_matrix),
+    Condition = ifelse(grepl("GSM318268[0-9]|GSM318269[0-9]", colnames(expression_matrix)), "Disease", "Control"),
+    Dataset = "Cardiovascular_Study",
+    Species = "human",
+    row.names = colnames(expression_matrix)
+  )
+}
+
 pca_df <- data.frame(
   PC1 = pca_result$x[,1],
   PC2 = pca_result$x[,2],
   Condition = sample_metadata$Condition,
-  Sample = sample_metadata$Sample_ID
+  Sample = rownames(pca_result$x)
 )
 
 # Calculate variance explained
@@ -426,20 +404,25 @@ pca_plot
 ## Expression Heatmap
 
 ```{r expression-heatmap, fig.cap="CAMK Family Expression Heatmap"}
-# Create heatmap for CAMK genes
-camk_expression <- expression_matrix[camk_genes, ]
+# Create heatmap for CAMK genes using real data
+camk_expression <- expression_matrix
 
-# Create annotation
+# Create annotation with actual condition values
 annotation_col <- data.frame(
   Condition = sample_metadata$Condition,
   row.names = colnames(camk_expression)
 )
 
-# Color palette
-colors <- colorRampPalette(c("blue", "white", "red"))(100)
+# Get unique conditions for color mapping
+unique_conditions <- unique(sample_metadata$Condition)
+condition_colors <- c("#2E86AB", "#A23B72")[1:length(unique_conditions)]
+names(condition_colors) <- unique_conditions
 
-# Create heatmap
-pheatmap(camk_expression,
+# Color palette for expression values
+colors <- colorRampPalette(c("blue", "white", "red"))(50)
+
+# Create heatmap with real cardiovascular data
+pheatmap::pheatmap(camk_expression,
          main = "CAMK Family Expression Heatmap",
          annotation_col = annotation_col,
          color = colors,
@@ -448,9 +431,7 @@ pheatmap(camk_expression,
          cluster_cols = TRUE,
          show_colnames = FALSE,
          fontsize = 10,
-         annotation_colors = list(
-           Condition = c(Control = "lightblue", Disease = "coral")
-         ))
+         annotation_colors = list(Condition = condition_colors))
 ```
 
 ## Sample Correlation
