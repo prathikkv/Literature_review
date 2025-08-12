@@ -1,0 +1,619 @@
+---
+title: "Targeted CAMK2D Dataset Discovery for Cardiac Research"
+author: "CAMK2D Research Consortium"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: hide
+    df_print: paged
+  pdf_document:
+    toc: true
+params:
+  focus_area: "both"  # "aFIB", "HF", or "both"
+  target_species: "all"  # "human", "mouse", or "all" 
+  min_samples: 10  # Lowered from 20 to include more studies
+  require_controls: FALSE  # Allow observational studies
+  validate_camk2d: TRUE
+  download_expression: TRUE
+  output_dir: "output"
+  max_datasets: 30  # Moderate increase to balance performance
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 12,
+  fig.height = 8,
+  dpi = 300
+)
+
+# Load required libraries
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(plotly)
+  library(openxlsx)
+  library(DT)
+  library(knitr)
+  library(kableExtra)
+})
+
+# Load our enhanced search functions
+source("functions/targeted_camk2d_search.R")
+source("functions/expression_data_validator.R")
+
+# Create output directory
+if (!dir.exists(params$output_dir)) {
+  dir.create(params$output_dir, recursive = TRUE)
+}
+```
+
+# Executive Summary
+
+This document implements **targeted CAMK2D dataset discovery** specifically aligned with our research proposal focusing on:
+
+- **Primary Objective**: CAMK2D role in atrial fibrillation (aFIB) and heart failure (HF)
+- **Data Requirements**: Actual expression matrices suitable for differential gene expression analysis
+- **Quality Validation**: CAMK2D expression levels, case-control design, adequate sample sizes
+- **Bioinformatics Ready**: Expression data, phenotype annotations, and analysis summaries
+
+**Key Enhancement**: This system moves beyond generic dataset discovery to **proposal-specific, validated datasets** with actual expression data ready for immediate bioinformatics analysis.
+
+# 1. Research Focus Configuration
+
+## 1.1 Analysis Parameters
+
+```{r parameters}
+cat("🎯 CAMK2D Research Configuration\n")
+cat("================================\n")
+cat("Focus Area:", params$focus_area, "\n")
+cat("Target Species:", params$target_species, "\n") 
+cat("Minimum Samples:", params$min_samples, "\n")
+cat("Require Controls:", params$require_controls, "\n")
+cat("Validate CAMK2D:", params$validate_camk2d, "\n")
+cat("Download Expression Data:", params$download_expression, "\n")
+cat("Maximum Datasets:", params$max_datasets, "\n\n")
+
+# Display research objectives alignment
+objectives_table <- data.frame(
+  Objective = c(
+    "CAMK2D role in aFIB",
+    "CAMK2D role in HF", 
+    "Expression analysis ready",
+    "Case-control validation",
+    "CAMK2D expression validation",
+    "Bioinformatics pipeline ready"
+  ),
+  Status = c(
+    ifelse(params$focus_area %in% c("aFIB", "both"), "✅ Enabled", "⚠️ Disabled"),
+    ifelse(params$focus_area %in% c("HF", "both"), "✅ Enabled", "⚠️ Disabled"),
+    ifelse(params$download_expression, "✅ Enabled", "❌ Disabled"),
+    ifelse(params$require_controls, "✅ Required", "⚠️ Optional"),
+    ifelse(params$validate_camk2d, "✅ Required", "⚠️ Optional"),
+    ifelse(params$download_expression, "✅ Ready", "❌ Not Ready")
+  )
+)
+
+kable(objectives_table, caption = "Research Objectives Alignment") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+# 2. Targeted Dataset Discovery
+
+## 2.1 Proposal-Specific Search Execution
+
+```{r targeted-discovery}
+cat("🚀 Executing targeted CAMK2D dataset discovery...\n\n")
+
+# Execute targeted search
+discovery_results <- discover_targeted_camk2d_datasets(
+  focus_area = params$focus_area,
+  species = params$target_species,
+  min_samples = params$min_samples,
+  require_controls = params$require_controls
+)
+
+# Display results
+discovered_datasets <- discovery_results$datasets
+search_summary <- discovery_results$summary
+
+if (nrow(discovered_datasets) > 0) {
+  
+  cat("📊 Discovery Results Summary:\n")
+  cat("   Total relevant datasets:", search_summary$total_datasets, "\n")
+  cat("   High CAMK2D relevance:", search_summary$high_relevance, "\n")
+  cat("   Medium CAMK2D relevance:", search_summary$medium_relevance, "\n")
+  cat("   Suitable for DGE analysis:", search_summary$dge_suitable, "\n")
+  cat("   Primary analysis candidates:", search_summary$primary_candidates, "\n")
+  cat("   Average sample size:", search_summary$avg_sample_size, "\n\n")
+  
+  # Display top datasets
+  top_datasets <- discovered_datasets %>%
+    head(min(params$max_datasets, nrow(discovered_datasets))) %>%
+    dplyr::select(GEO_Accession, Title, Organism, Sample_Count, CAMK2D_Relevance, 
+           Priority_Class, Recommendation, Total_Relevance_Score)
+  
+  kable(top_datasets, 
+        caption = "Top CAMK2D-Relevant Datasets Discovered",
+        col.names = c("Accession", "Title", "Species", "Samples", 
+                     "CAMK2D Relevance", "Priority", "Recommendation", "Score")) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"), font_size = 10) %>%
+    scroll_box(width = "100%")
+  
+} else {
+  cat("❌ No relevant datasets discovered with current criteria\n")
+  cat("💡 Suggestions:\n")
+  cat("   - Broaden species criteria (set target_species = 'all')\n") 
+  cat("   - Reduce minimum samples (set min_samples = 10)\n")
+  cat("   - Disable control requirement (set require_controls = FALSE)\n")
+}
+```
+
+## 2.2 Search Strategy Analysis
+
+```{r search-strategy-analysis}
+if (!is.null(discovery_results$search_strategies) && nrow(discovered_datasets) > 0) {
+  
+  # Analyze search strategy effectiveness
+  strategy_effectiveness <- discovered_datasets %>%
+    count(Search_Strategy, name = "Datasets_Found") %>%
+    arrange(desc(Datasets_Found))
+  
+  cat("🔍 Search Strategy Effectiveness:\n")
+  for (i in 1:nrow(strategy_effectiveness)) {
+    strategy <- strategy_effectiveness$Search_Strategy[i]
+    count <- strategy_effectiveness$Datasets_Found[i]
+    description <- discovery_results$search_strategies[[strategy]]$description
+    cat("   ", strategy, ":", count, "datasets -", description, "\n")
+  }
+  cat("\n")
+  
+  # Visualize strategy effectiveness
+  strategy_plot <- ggplot(strategy_effectiveness, 
+                         aes(x = reorder(Search_Strategy, Datasets_Found), 
+                             y = Datasets_Found)) +
+    geom_col(fill = "#3498db", alpha = 0.8) +
+    coord_flip() +
+    labs(title = "Search Strategy Effectiveness",
+         subtitle = "Number of relevant datasets found per strategy",
+         x = "Search Strategy", 
+         y = "Datasets Found") +
+    theme_minimal()
+  
+  print(strategy_plot)
+}
+```
+
+# 3. Expression Data Validation
+
+## 3.1 Download and Validate Expression Data
+
+```{r expression-validation}
+validated_datasets <- list()
+validation_summary <- list()
+
+if (params$download_expression && nrow(discovered_datasets) > 0) {
+  
+  cat("📥 Downloading and validating expression data...\n\n")
+  
+  # Select top datasets for validation (limit to prevent timeout)
+  top_datasets_for_validation <- discovered_datasets %>%
+    filter(Priority_Class %in% c("Highest", "High")) %>%
+    arrange(desc(Total_Relevance_Score)) %>%
+    head(5)  # Limit to top 5 to prevent timeout
+  
+  if (nrow(top_datasets_for_validation) == 0) {
+    top_datasets_for_validation <- head(discovered_datasets, 3)
+  }
+  
+  cat("🎯 Validating", nrow(top_datasets_for_validation), "high-priority datasets\n\n")
+  
+  for (i in 1:nrow(top_datasets_for_validation)) {
+    dataset <- top_datasets_for_validation[i, ]
+    geo_accession <- dataset$GEO_Accession
+    
+    cat("Processing", i, "of", nrow(top_datasets_for_validation), ":", geo_accession, "\n")
+    
+    # Download and validate
+    validation_result <- download_and_validate_expression(
+      geo_accession = geo_accession,
+      output_dir = file.path(params$output_dir, "expression_data"),
+      validate_camk2d = params$validate_camk2d,
+      min_expression = 1
+    )
+    
+    if (!is.null(validation_result) && validation_result$suitable) {
+      validated_datasets[[geo_accession]] <- validation_result
+      cat("✅", geo_accession, "validated and ready for analysis\n")
+    } else {
+      reason <- if (!is.null(validation_result)) validation_result$reason else "Download failed"
+      cat("❌", geo_accession, "failed validation:", reason, "\n")
+    }
+    
+    cat("\n")
+  }
+  
+  # Summarize validation results
+  n_validated <- length(validated_datasets)
+  n_attempted <- nrow(top_datasets_for_validation)
+  
+  cat("📊 Expression Data Validation Summary:\n")
+  cat("   Datasets attempted:", n_attempted, "\n")
+  cat("   Successfully validated:", n_validated, "\n")
+  cat("   Validation success rate:", round(n_validated/n_attempted*100, 1), "%\n\n")
+  
+  if (n_validated > 0) {
+    # Create validation summary table
+    validation_summary_data <- map_dfr(validated_datasets, function(dataset) {
+      data.frame(
+        GEO_Accession = dataset$geo_accession,
+        Genes = dataset$analysis_summary$n_genes,
+        Samples = dataset$analysis_summary$n_samples,
+        Groups = dataset$analysis_summary$n_groups,
+        CAMK2D_Expression = round(dataset$analysis_summary$camk2d_mean_expr, 3),
+        Suitable_for_DGE = dataset$analysis_summary$suitable_for_dge,
+        Missing_Data_Percent = round(dataset$analysis_summary$missing_data_percent, 1),
+        stringsAsFactors = FALSE
+      )
+    })
+    
+    kable(validation_summary_data,
+          caption = "Expression Data Validation Results",
+          col.names = c("Accession", "Genes", "Samples", "Groups", 
+                       "CAMK2D Expr", "DGE Ready", "Missing %")) %>%
+      kable_styling(bootstrap_options = c("striped", "hover"))
+  }
+  
+} else {
+  cat("⚠️ Expression data download disabled or no datasets to validate\n")
+}
+```
+
+## 3.2 CAMK2D Expression Analysis
+
+```{r camk2d-expression-analysis}
+if (length(validated_datasets) > 0) {
+  
+  cat("🧬 CAMK2D Expression Analysis Across Validated Datasets\n\n")
+  
+  # Extract CAMK2D expression data
+  camk2d_expression_summary <- map_dfr(validated_datasets, function(dataset) {
+    camk2d_val <- dataset$camk2d_validation
+    
+    if (!is.null(camk2d_val) && camk2d_val$camk2d_detected) {
+      result <- data.frame(
+        Dataset = dataset$geo_accession,
+        CAMK2D_Mean_Expression = round(camk2d_val$camk2d_mean_expression, 3),
+        CAMK2D_Max_Expression = round(camk2d_val$camk2d_max_expression, 3),
+        Features_Found = length(camk2d_val$camk2d_features_found),
+        stringsAsFactors = FALSE
+      )
+      
+      # Add differential expression info if available
+      if (!is.null(camk2d_val$differential_expression) && 
+          camk2d_val$differential_expression$testable) {
+        diff_expr <- camk2d_val$differential_expression
+        result$Group1 <- diff_expr$group1_name
+        result$Group2 <- diff_expr$group2_name
+        result$Group1_Mean <- round(diff_expr$group1_mean, 3)
+        result$Group2_Mean <- round(diff_expr$group2_mean, 3)
+        result$Log2_Fold_Change <- round(diff_expr$log2_fold_change, 3)
+        result$P_Value <- format(diff_expr$p_value, scientific = TRUE, digits = 3)
+        result$Significant <- diff_expr$significant
+      }
+      
+      return(result)
+    }
+    return(NULL)
+  })
+  
+  if (nrow(camk2d_expression_summary) > 0) {
+    kable(camk2d_expression_summary,
+          caption = "CAMK2D Expression Analysis Summary",
+          col.names = c("Dataset", "Mean Expr", "Max Expr", "Features", 
+                       "Group 1", "Group 2", "Group1 Mean", "Group2 Mean", 
+                       "Log2 FC", "P Value", "Significant")) %>%
+      kable_styling(bootstrap_options = c("striped", "hover"), font_size = 9) %>%
+      scroll_box(width = "100%")
+    
+    # Visualize CAMK2D expression levels
+    if (nrow(camk2d_expression_summary) >= 2) {
+      expr_plot <- ggplot(camk2d_expression_summary, 
+                         aes(x = reorder(Dataset, CAMK2D_Mean_Expression), 
+                             y = CAMK2D_Mean_Expression)) +
+        geom_col(fill = "#e74c3c", alpha = 0.8) +
+        coord_flip() +
+        labs(title = "CAMK2D Expression Levels Across Datasets",
+             subtitle = "Mean expression levels in validated datasets",
+             x = "Dataset", 
+             y = "CAMK2D Mean Expression") +
+        theme_minimal()
+      
+      print(expr_plot)
+    }
+  }
+}
+```
+
+# 4. Dataset Quality and Recommendation
+
+## 4.1 Comprehensive Dataset Scoring
+
+```{r final-dataset-scoring}
+if (nrow(discovered_datasets) > 0) {
+  
+  cat("📊 Final Dataset Quality Assessment and Recommendations\n\n")
+  
+  # Enhanced scoring incorporating validation results
+  final_scored_datasets <- discovered_datasets %>%
+    mutate(
+      Expression_Validated = GEO_Accession %in% names(validated_datasets),
+      Expression_Score = ifelse(Expression_Validated, 10, 0),
+      Final_Score = Total_Relevance_Score + Expression_Score,
+      Final_Recommendation = case_when(
+        Expression_Validated & Priority_Class == "Highest" ~ "PRIMARY - Ready for Analysis",
+        Expression_Validated & Priority_Class == "High" ~ "VALIDATION - Ready for Analysis", 
+        Expression_Validated ~ "SUPPLEMENTARY - Analysis Ready",
+        Priority_Class == "Highest" ~ "HIGH PRIORITY - Needs Validation",
+        Priority_Class == "High" ~ "MEDIUM PRIORITY - Needs Validation",
+        TRUE ~ "LOW PRIORITY - Consider if needed"
+      )
+    ) %>%
+    arrange(desc(Final_Score))
+  
+  # Display final recommendations
+  recommendation_summary <- final_scored_datasets %>%
+    dplyr::select(GEO_Accession, Title, Sample_Count, CAMK2D_Relevance, 
+           Expression_Validated, Final_Score, Final_Recommendation) %>%
+    head(10)
+  
+  kable(recommendation_summary,
+        caption = "Final Dataset Recommendations for CAMK2D Research",
+        col.names = c("Accession", "Title", "Samples", "CAMK2D Relevance",
+                     "Validated", "Final Score", "Recommendation")) %>%
+    kable_styling(bootstrap_options = c("striped", "hover"), font_size = 9) %>%
+    scroll_box(width = "100%")
+  
+  # Recommendation distribution
+  rec_distribution <- table(final_scored_datasets$Final_Recommendation)
+  
+  cat("💡 Recommendation Summary:\n")
+  for (rec in names(rec_distribution)) {
+    cat("   ", rec, ":", rec_distribution[rec], "datasets\n")
+  }
+  cat("\n")
+}
+```
+
+## 4.2 Research Priority Matrix
+
+```{r priority-matrix}
+if (nrow(discovered_datasets) > 0) {
+  
+  # Create priority matrix for research planning
+  priority_matrix <- final_scored_datasets %>%
+    mutate(
+      Research_Phase = case_when(
+        str_detect(Final_Recommendation, "PRIMARY") ~ "Phase 1: Primary Analysis",
+        str_detect(Final_Recommendation, "VALIDATION") ~ "Phase 2: Validation",
+        str_detect(Final_Recommendation, "SUPPLEMENTARY") ~ "Phase 3: Meta-Analysis",
+        TRUE ~ "Phase 4: Future Consideration"
+      ),
+      Data_Readiness = ifelse(Expression_Validated, "Analysis Ready", "Needs Processing"),
+      Proposal_Alignment = case_when(
+        CAMK2D_Relevance == "High" & str_detect(Search_Strategy, "afib|hf") ~ "Perfect Match",
+        CAMK2D_Relevance == "High" ~ "High Alignment", 
+        CAMK2D_Relevance == "Medium" ~ "Moderate Alignment",
+        TRUE ~ "Low Alignment"
+      )
+    ) %>%
+    count(Research_Phase, Data_Readiness, Proposal_Alignment) %>%
+    pivot_wider(names_from = c(Data_Readiness, Proposal_Alignment), 
+                values_from = n, 
+                values_fill = 0)
+  
+  kable(priority_matrix,
+        caption = "Research Priority Matrix") %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+}
+```
+
+# 5. Bioinformatics Pipeline Readiness
+
+## 5.1 Analysis-Ready Datasets Summary
+
+```{r analysis-ready-summary}
+analysis_ready_datasets <- names(validated_datasets)
+
+if (length(analysis_ready_datasets) > 0) {
+  
+  cat("🧬 Bioinformatics Pipeline Ready Datasets\n")
+  cat("=========================================\n\n")
+  
+  for (accession in analysis_ready_datasets) {
+    dataset <- validated_datasets[[accession]]
+    
+    cat("📊 Dataset:", accession, "\n")
+    cat("   📁 Expression file:", basename(dataset$saved_files$expression_file), "\n")
+    cat("   🏷️  Phenotype file:", basename(dataset$saved_files$phenotype_file), "\n")
+    cat("   📝 Feature file:", basename(dataset$saved_files$feature_file), "\n")
+    cat("   🧬 Genes:", dataset$analysis_summary$n_genes, "\n")
+    cat("   👥 Samples:", dataset$analysis_summary$n_samples, "\n")
+    cat("   📊 Groups:", dataset$analysis_summary$n_groups, "\n")
+    cat("   ✅ CAMK2D expressed:", dataset$analysis_summary$camk2d_expressed, "\n")
+    cat("   🔬 DGE ready:", dataset$analysis_summary$suitable_for_dge, "\n")
+    cat("\n")
+  }
+  
+  # Generate analysis commands
+  cat("💻 Suggested Analysis Commands:\n")
+  cat("# Load datasets for analysis\n")
+  for (accession in analysis_ready_datasets) {
+    cat("# Dataset:", accession, "\n")
+    cat(paste0("expr_", gsub("[^A-Za-z0-9]", "_", accession), " <- read_csv('", 
+               file.path(params$output_dir, "expression_data", paste0(accession, "_expression.csv")), "')\n"))
+    cat(paste0("pheno_", gsub("[^A-Za-z0-9]", "_", accession), " <- read_csv('", 
+               file.path(params$output_dir, "expression_data", paste0(accession, "_phenotypes.csv")), "')\n"))
+    cat("\n")
+  }
+  
+} else {
+  cat("⚠️  No datasets are currently ready for bioinformatics analysis\n")
+  cat("💡 To get analysis-ready datasets:\n")
+  cat("   1. Set download_expression = TRUE\n")
+  cat("   2. Ensure adequate datasets meet validation criteria\n")
+  cat("   3. Check CAMK2D expression requirements\n")
+}
+```
+
+# 6. Export and Documentation
+
+## 6.1 Comprehensive Results Export
+
+```{r export-results}
+if (nrow(discovered_datasets) > 0) {
+  
+  cat("📊 Exporting comprehensive results...\n")
+  
+  # Create Excel workbook
+  wb <- createWorkbook()
+  
+  # Sheet 1: Discovery Results
+  addWorksheet(wb, "Discovery_Results")
+  writeData(wb, "Discovery_Results", final_scored_datasets)
+  
+  # Sheet 2: Validation Summary
+  if (exists("validation_summary_data") && nrow(validation_summary_data) > 0) {
+    addWorksheet(wb, "Validation_Results")
+    writeData(wb, "Validation_Results", validation_summary_data)
+  }
+  
+  # Sheet 3: CAMK2D Expression
+  if (exists("camk2d_expression_summary") && nrow(camk2d_expression_summary) > 0) {
+    addWorksheet(wb, "CAMK2D_Expression")
+    writeData(wb, "CAMK2D_Expression", camk2d_expression_summary)
+  }
+  
+  # Sheet 4: Analysis Summary
+  analysis_overview <- data.frame(
+    Metric = c("Total Datasets Discovered", "High CAMK2D Relevance", 
+               "Expression Data Validated", "Analysis Ready Datasets",
+               "Primary Candidates", "Validation Candidates"),
+    Value = c(nrow(discovered_datasets), 
+              sum(discovered_datasets$CAMK2D_Relevance == "High"),
+              length(validated_datasets),
+              sum(final_scored_datasets$Expression_Validated),
+              sum(str_detect(final_scored_datasets$Final_Recommendation, "PRIMARY")),
+              sum(str_detect(final_scored_datasets$Final_Recommendation, "VALIDATION")))
+  )
+  
+  addWorksheet(wb, "Analysis_Overview")
+  writeData(wb, "Analysis_Overview", analysis_overview)
+  
+  # Save Excel file
+  excel_file <- file.path(params$output_dir, 
+                         paste0("CAMK2D_Targeted_Discovery_", format(Sys.Date(), "%Y%m%d"), ".xlsx"))
+  saveWorkbook(wb, excel_file, overwrite = TRUE)
+  
+  cat("✅ Results exported to:", excel_file, "\n")
+  
+  # Also save key datasets as CSV
+  csv_file <- file.path(params$output_dir, 
+                       paste0("CAMK2D_Discovery_Results_", format(Sys.Date(), "%Y%m%d"), ".csv"))
+  write_csv(final_scored_datasets, csv_file)
+  
+  cat("✅ Dataset details saved to:", csv_file, "\n")
+}
+```
+
+# 7. Research Recommendations
+
+## 7.1 Next Steps for CAMK2D Analysis
+
+```{r research-recommendations}
+cat("🔬 CAMK2D Research Recommendations\n")
+cat("==================================\n\n")
+
+if (length(analysis_ready_datasets) > 0) {
+  cat("✅ IMMEDIATE ACTION ITEMS:\n")
+  cat("1. Begin differential expression analysis with", length(analysis_ready_datasets), "validated datasets\n")
+  cat("2. Focus on CAMK2D expression patterns across disease groups\n")
+  cat("3. Identify CAMK2D co-expressed genes for pathway analysis\n") 
+  cat("4. Cross-validate findings across multiple datasets\n\n")
+  
+  cat("📊 SUGGESTED ANALYSIS WORKFLOW:\n")
+  cat("1. Quality control and normalization of expression data\n")
+  cat("2. Differential expression analysis (case vs control)\n")
+  cat("3. CAMK2D-centered gene network analysis\n")
+  cat("4. Pathway enrichment focusing on cardiac function\n")
+  cat("5. Cross-species validation if mouse data available\n\n")
+}
+
+if (nrow(discovered_datasets) > length(analysis_ready_datasets)) {
+  unvalidated_count <- nrow(discovered_datasets) - length(analysis_ready_datasets)
+  cat("⚠️  FUTURE VALIDATION NEEDED:\n")
+  cat("•", unvalidated_count, "additional relevant datasets identified\n")
+  cat("• Consider validating high-priority unprocessed datasets\n")
+  cat("• Focus on datasets with 'HIGH PRIORITY - Needs Validation' status\n\n")
+}
+
+# Proposal alignment check
+cat("🎯 PROPOSAL ALIGNMENT CHECK:\n")
+alignment_check <- data.frame(
+  Requirement = c(
+    "aFIB-focused datasets",
+    "HF-focused datasets", 
+    "CAMK2D expression validated",
+    "Case-control design",
+    "Adequate sample sizes",
+    "Expression data ready"
+  ),
+  Status = c(
+    ifelse(any(str_detect(discovered_datasets$Search_Strategy, "afib")), "✅ Found", "❌ Missing"),
+    ifelse(any(str_detect(discovered_datasets$Search_Strategy, "hf")), "✅ Found", "❌ Missing"),
+    ifelse(length(validated_datasets) > 0, "✅ Validated", "⚠️  Partial"),
+    ifelse(params$require_controls, "✅ Required", "⚠️  Optional"), 
+    ifelse(any(discovered_datasets$Sample_Count >= params$min_samples), "✅ Met", "❌ Below threshold"),
+    ifelse(length(analysis_ready_datasets) > 0, "✅ Ready", "❌ Not ready")
+  )
+)
+
+kable(alignment_check, caption = "Proposal Requirements Status") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+---
+
+# Final Summary
+
+```{r final-summary}
+cat("📋 CAMK2D Targeted Discovery Summary\n")
+cat("=====================================\n")
+cat("Analysis completed on:", format(Sys.Date(), "%Y-%m-%d"), "\n")
+cat("Focus area:", params$focus_area, "\n")
+cat("Target species:", params$target_species, "\n\n")
+
+cat("📊 Key Results:\n")
+cat("• Datasets discovered:", ifelse(exists("discovered_datasets"), nrow(discovered_datasets), 0), "\n")
+cat("• Expression data validated:", length(validated_datasets), "\n")
+cat("• Analysis-ready datasets:", length(analysis_ready_datasets), "\n")
+cat("• High CAMK2D relevance:", ifelse(exists("discovered_datasets"), sum(discovered_datasets$CAMK2D_Relevance == "High"), 0), "\n\n")
+
+if (length(analysis_ready_datasets) > 0) {
+  cat("🚀 READY FOR ANALYSIS:\n")
+  cat("Your CAMK2D research can proceed immediately with validated expression data\n")
+  cat("Next step: Begin differential gene expression analysis\n")
+} else {
+  cat("⚠️  ACTION REQUIRED:\n")
+  cat("Enable expression data download to get analysis-ready datasets\n")
+  cat("Set download_expression = TRUE and re-run analysis\n")
+}
+```
+
+---
+
+*Targeted CAMK2D Dataset Discovery Report generated on `r Sys.Date()` with proposal-specific validation and expression data readiness.*

@@ -1,0 +1,52 @@
+# CAMK2D Research Platform Configuration
+# ======================================
+# Production configuration for the CAMK2D research platform
+
+# Research Focus Settings
+research:
+  focus_area: "both"              # Options: "aFIB", "HF", "both"
+  species: "human"                # Primary species for analysis
+  
+# Dataset Processing Limits
+datasets:
+  max_datasets: 12               # Maximum datasets to validate (computational limit)
+  min_samples: 10                # Minimum samples per dataset (statistical power)
+  min_camk2d_expression: 2       # Minimum CAMK2D expression level (biological relevance)
+  
+# Expression Data Settings
+expression:
+  validation_enabled: true       # Enable expression data download and validation
+  validate_camk2d: true         # Require CAMK2D detection in all datasets
+  cache_downloads: true         # Cache downloads to improve performance
+  max_retries: 3               # Maximum retry attempts for failed downloads
+  timeout_seconds: 600         # Download timeout (10 minutes)
+  
+# Output Settings
+output:
+  directory: "output"           # Results directory
+  generate_reports: true       # Generate HTML reports
+  save_cache: true            # Save intermediate results for performance
+  
+# Performance Settings
+performance:
+  parallel_processing: false   # Enable parallel processing (experimental)
+  verbose_logging: true       # Enable detailed logging
+  cleanup_temp_files: true   # Clean up temporary files after processing
+
+# Quality Control Thresholds
+quality:
+  min_genes: 1000             # Minimum genes required in expression data
+  min_variance_genes: 0.2     # Minimum fraction of genes with adequate variance
+  max_missing_data: 0.3       # Maximum fraction of missing data allowed
+  
+# Search Strategy Settings
+search:
+  strict_mode: true           # Use strict search criteria for better precision
+  include_mouse_data: false   # Include mouse data in searches
+  require_controls: false     # Require control samples (set false for more datasets)
+  
+# File Management
+files:
+  auto_cleanup: true          # Automatically clean up old files
+  max_cache_size_gb: 5        # Maximum cache size in GB
+  backup_results: false       # Create backup copies of important results
