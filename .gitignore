@@ -1,0 +1,47 @@
+# R and RStudio files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# RMarkdown temporary files
+*_cache/
+*_files/
+*.knit.md
+*.utf8.md
+
+# Exception: Keep final documentation files
+!CAMK2D_Analysis_Documentation_Real_Data_files/
+
+# Temporary documentation files
+*_Fixed.Rmd
+*_temp.html
+*_draft.*
+
+# R package development
+*.tar.gz
+*.Rcheck/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary and log files
+*.log
+*.tmp
+*.temp
+
+# Large data cache files (keep essential ones in cache/)
+# Exclude specific temporary cache entries
+**/load-real-data_*.RData
+**/load-real-data_*.rdb  
+**/load-real-data_*.rdx
+**/simulate-expression-data_*.RData
+**/simulate-expression-data_*.rdb
+**/simulate-expression-data_*.rdx
