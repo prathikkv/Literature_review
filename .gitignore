@@ -92,11 +92,13 @@ test_*.R
 *.tar
 *.7z
 
-# Binary data files > 50MB
+# Binary data files > 50MB (regenerable from pipeline)
 *.rds
 
-# Exception: Keep small essential RDS files in specific directories
+# Exception: Keep small essential RDS files in specific directories  
 !data/*.rds
+# Ensure output RDS files are always ignored
+output/*.rds
 
 # ============================================================================
 # ENVIRONMENT AND SECURITY

@@ -51,9 +51,17 @@ get_comprehensive_dataset_list <- function() {
       # Microarray HF datasets
       GSE57338 = list(
         description = "Heart Failure vs control samples (microarray)", 
-        expected_samples = 70,
+        expected_samples = 313,  # Corrected: 177 HF + 136 controls
         platform = "GPL570",
         tissue = "heart",
+        condition = "heart_failure",
+        species = "human"
+      ),
+      GSE141910 = list(
+        description = "Large heart failure dataset with controls (RNA-seq)",
+        expected_samples = 366,  # 200 HF + 166 controls
+        platform = "GPL16791",  # Illumina HiSeq 2500
+        tissue = "heart", 
         condition = "heart_failure",
         species = "human"
       )

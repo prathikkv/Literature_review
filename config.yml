@@ -9,7 +9,7 @@ research:
   
 # Dataset Processing Limits
 datasets:
-  max_datasets: 12               # Maximum datasets to validate (computational limit)
+  max_datasets: 6                # Updated to reflect cleaned, working datasets
   min_samples: 10                # Minimum samples per dataset (statistical power)
   min_camk2d_expression: 2       # Minimum CAMK2D expression level (biological relevance)
   
