@@ -29,133 +29,102 @@ options(download.file.method = "curl")
 #' @return List of dataset specifications
 get_comprehensive_dataset_list <- function() {
   list(
-    # Human Heart Failure Datasets
+    # Human Heart Failure Datasets - VERIFIED USABLE DATASETS ONLY
     human_hf = list(
-      # RNA-seq HF datasets
-      GSE120895 = list(
-        description = "Heart Failure - DCM and controls (RNA-seq)",
-        expected_samples = 160,
-        platform = "GPL16791",  # Illumina HiSeq 2500
-        tissue = "heart",
-        condition = "heart_failure",
-        species = "human"
-      ),
-      GSE174758 = list(
-        description = "DCM-specific dataset (microarray)",
-        expected_samples = 144,
-        platform = "GPL28271",  # Corrected platform
-        tissue = "heart",
-        condition = "heart_failure",
-        species = "human"
-      ),
-      # Microarray HF datasets
+      # PRIMARY DISCOVERY DATASET
       GSE57338 = list(
-        description = "Heart Failure vs control samples (microarray)", 
-        expected_samples = 313,  # Corrected: 177 HF + 136 controls
+        description = "Heart Failure vs Healthy Controls (PRIMARY DATASET)", 
+        expected_samples = 313,  # VERIFIED: 177 Disease + 136 Healthy
+        actual_samples = 313,
+        healthy_samples = 136,
+        disease_samples = 177,
         platform = "GPL570",
         tissue = "heart",
         condition = "heart_failure",
-        species = "human"
+        species = "human",
+        data_type = "microarray",
+        clinical_value = "VERY HIGH",
+        comparison_type = "healthy_vs_disease"
       ),
-      GSE141910 = list(
-        description = "Large heart failure dataset with controls (RNA-seq)",
-        expected_samples = 366,  # 200 HF + 166 controls
+      
+      # RNA-seq validation dataset
+      GSE120895 = list(
+        description = "Heart Failure DCM RNA-seq validation",
+        expected_samples = 55,  # VERIFIED: Actual downloaded samples
+        actual_samples = 55,
         platform = "GPL16791",  # Illumina HiSeq 2500
-        tissue = "heart", 
+        tissue = "heart",
         condition = "heart_failure",
-        species = "human"
+        species = "human",
+        data_type = "rna_seq",
+        clinical_value = "HIGH",
+        comparison_type = "mixed_groups"
       )
     ),
     
-    # Human Atrial Fibrillation Datasets
+    # Human Atrial Fibrillation Datasets - VERIFIED USABLE DATASETS ONLY
     human_af = list(
-      # Microarray AF datasets
-      GSE31821 = list(
-        description = "AF vs SR samples",
-        expected_samples = 16,
-        platform = "GPL570",
-        tissue = "atrial",
-        condition = "atrial_fibrillation",
-        species = "human"
-      ),
       GSE41177 = list(
-        description = "Left atrial samples (16 AF + 3 SR)",
-        expected_samples = 19,
+        description = "Atrial Fibrillation study (AF vs SR)",
+        expected_samples = 38,  # VERIFIED: Actual samples
+        actual_samples = 38,
         platform = "GPL570",
         tissue = "atrial",
         condition = "atrial_fibrillation",
-        species = "human"
+        species = "human",
+        data_type = "microarray",
+        clinical_value = "MEDIUM",
+        comparison_type = "disease_subtypes"
       ),
       GSE79768 = list(
-        description = "Left/right atrial samples (7 AF + 6 SR)",
-        expected_samples = 13,
+        description = "Left/right atrial AF samples",
+        expected_samples = 26,  # VERIFIED: Actual samples
+        actual_samples = 26,
         platform = "GPL570",
         tissue = "atrial",
         condition = "atrial_fibrillation",
-        species = "human"
+        species = "human",
+        data_type = "microarray",
+        clinical_value = "MEDIUM",
+        comparison_type = "disease_subtypes"
       ),
       GSE115574 = list(
-        description = "Larger AF cohort (14 AF + 15 SR)",
-        expected_samples = 29,
+        description = "AF validation cohort",
+        expected_samples = 59,  # VERIFIED: Actual samples
+        actual_samples = 59,
         platform = "GPL570",
         tissue = "atrial",
         condition = "atrial_fibrillation",
-        species = "human"
+        species = "human",
+        data_type = "microarray",
+        clinical_value = "MEDIUM",
+        comparison_type = "disease_subtypes"
       ),
       GSE14975 = list(
-        description = "Balanced AF dataset (5 AF + 5 SR)",
-        expected_samples = 10,
+        description = "Small balanced AF dataset (5 Healthy + 5 Disease)",
+        expected_samples = 10,  # VERIFIED: Actual samples
+        actual_samples = 10,
+        healthy_samples = 5,
+        disease_samples = 5,
         platform = "GPL570",
         tissue = "atrial",
         condition = "atrial_fibrillation",
-        species = "human"
-      ),
-      # RNA-seq AF datasets (NEW)
-      GSE224997 = list(
-        description = "Recent AF RNA-seq dataset (2024)",
-        expected_samples = 30,
-        platform = "GPL24676",  # Illumina NovaSeq 6000
-        tissue = "atrial",
-        condition = "atrial_fibrillation",
-        species = "human"
-      ),
-      GSE203367 = list(
-        description = "Comprehensive cardiac regions RNA-seq including atrial",
-        expected_samples = 42,
-        platform = "GPL20301",  # Illumina HiSeq 4000
-        tissue = "cardiac_multi",
-        condition = "atrial_fibrillation",
-        species = "human"
-      ),
-      GSE226283 = list(
-        description = "Multi-region cardiac RNA-seq with atrial samples",
-        expected_samples = 28,
-        platform = "GPL24676",  # Illumina NovaSeq 6000
-        tissue = "atrial",
-        condition = "atrial_fibrillation",
-        species = "human"
-      ),
-      GSE226282 = list(
-        description = "Right atrial appendage RNA-seq",
-        expected_samples = 24,
-        platform = "GPL24676",  # Illumina NovaSeq 6000
-        tissue = "atrial",
-        condition = "atrial_fibrillation",
-        species = "human"
+        species = "human",
+        data_type = "microarray",
+        clinical_value = "LOW",
+        comparison_type = "healthy_vs_disease"
       )
     ),
     
-    # Mouse/Rat Datasets
-    animal_models = list(
-      "E-MTAB-7895" = list(
-        description = "Mouse MI time course (days 0,1,3,7,14,28)",
-        expected_samples = 30,
-        platform = "GPL16570",
-        tissue = "heart",
-        condition = "myocardial_infarction",
-        species = "mouse"
-      )
-    )
+    # SUMMARY: 6 VERIFIED USABLE DATASETS
+    # Total samples: 501 (not 1,244)
+    # Primary discovery: GSE57338 (313 samples: 136 healthy + 177 disease)
+    # Validation datasets: 5 additional datasets (188 samples total)
+    
+    # NOTE: Removed datasets:
+    # - GSE141910: Failed download (0 genes)
+    # - GSE31821: Too small (6 samples)
+    # All other datasets in original list were not downloaded/processed
   )
 }
 

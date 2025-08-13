@@ -1,6 +1,6 @@
 ---
-title: "Multi-Resolution CAMK Analysis in Cardiovascular Disease"
-subtitle: "Comprehensive CAMK2D-Focused Investigation: From Single-Cell to Clinical Translation (1,244 samples across 8 datasets)"
+title: "CAMK Analysis in Cardiovascular Disease"
+subtitle: "Comprehensive CAMK2D-Focused Investigation: From Discovery to Clinical Translation (501 samples across 6 datasets)"
 author: "Bioinformatics Research Team"
 date: "`r Sys.Date()`"
 output:
@@ -80,8 +80,8 @@ breakthrough_metrics <- data.frame(
     "Clinical Translation Pathways"
   ),
   Previous = c("313", "1", "1", "1", "1", "1", "0"),
-  Current = c("1,244", "8", "6", "4", "3", "4", "2"),
-  Improvement = c("4x", "8x", "6x", "4x", "3x", "4x", "New")
+  Current = c("501", "6", "6", "2", "2", "2", "2"),
+  Improvement = c("1.6x", "6x", "6x", "2x", "2x", "2x", "New")
 )
 
 if (kable_enhanced) {
@@ -193,7 +193,7 @@ dataset_summary <- rbind(comprehensive_datasets, total_row)
 
 if (kable_enhanced) {
   dataset_summary %>%
-    kable(caption = "Comprehensive Multi-Resolution Dataset Overview (Total: 1,244 samples)") %>%
+    kable(caption = "Comprehensive Dataset Overview (Total: 501 samples)") %>%
     kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
     column_spec(8, background = "#90EE90") %>%
     row_spec(nrow(dataset_summary), background = "#FFE4B5", bold = TRUE)
@@ -202,11 +202,11 @@ if (kable_enhanced) {
 }
 
 cat("\n📊 **Dataset Integration Summary:**\n")
-cat("• **Total Samples**: 1,244 (4x increase from original 313)\n")
-cat("• **Resolution Levels**: 4 tiers for comprehensive validation\n") 
-cat("• **Species Coverage**: Human, Rat, Mouse (3 species)\n")
-cat("• **Data Types**: Microarray + Single-cell RNA-seq (4 platforms)\n")
-cat("• **Validation Confidence**: 3x higher through multi-resolution approach\n\n")
+cat("• **Total Samples**: 501 (1.6x increase from original 313 single-dataset analysis)\n")
+cat("• **Datasets**: 6 verified usable datasets (2 platforms)\n") 
+cat("• **Species Coverage**: Human only (all verified datasets)\n")
+cat("• **Data Types**: Microarray (5 datasets) + RNA-seq (1 dataset)\n")
+cat("• **Primary Discovery**: GSE57338 (313 samples: 136 healthy + 177 disease)\n\n")
 ```
 
 ## Sample Distribution Across Resolution Tiers
@@ -235,7 +235,7 @@ ggplot(comprehensive_datasets, aes(x = Resolution_Tier, y = Samples, fill = Data
   scale_fill_brewer(type = "qual", palette = "Set2") +
   labs(
     title = "Multi-Resolution Sample Distribution",
-    subtitle = "1,244 total samples across 4 validation tiers",
+    subtitle = "501 total samples across 6 datasets",
     x = "Resolution Tier",
     y = "Number of Samples",
     fill = "Data Type"
@@ -714,7 +714,7 @@ summary_stats <- data.frame(
     "6 significant genes, CAMK2G prime target",
     "4-tier validation, multi-resolution framework",
     "Drug development + biomarker pathways",
-    "1,244 samples, 60% complexity reduction"
+    "501 samples, verified dataset quality"
   ),
   Impact_Level = c("Breakthrough", "High Innovation", "Very High", "High Efficiency")
 )
@@ -818,9 +818,9 @@ cat("📋 **Analysis Environment Information:**\n")
 cat("• **Analysis Date**:", as.character(Sys.Date()), "\n")
 cat("• **R Version**:", R.version.string, "\n")
 cat("• **Platform**:", R.version$platform, "\n")
-cat("• **Total Samples Analyzed**: 1,244\n")
-cat("• **Datasets Integrated**: 8\n")
-cat("• **Analysis Framework**: Multi-resolution 4-tier validation\n")
+cat("• **Total Samples Analyzed**: 501\n")
+cat("• **Datasets Integrated**: 6\n")
+cat("• **Analysis Framework**: Multi-dataset validation\n")
 cat("• **Primary Focus**: CAMK2D comprehensive analysis\n")
 cat("• **Clinical Translation**: Drug development + biomarker pathways\n\n")
 
