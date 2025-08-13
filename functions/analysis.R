@@ -49,7 +49,7 @@ comprehensive_differential_expression_pipeline <- function(processed_datasets,
                                                           fdr_threshold = 0.05,
                                                           fold_change_threshold = 1.2) {
   
-  cat("📊 Comprehensive Differential Expression Analysis\n")
+  cat("DATA: Comprehensive Differential Expression Analysis\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -62,7 +62,7 @@ comprehensive_differential_expression_pipeline <- function(processed_datasets,
   for (dataset_id in names(processed_datasets)) {
     dataset <- processed_datasets[[dataset_id]]
     
-    cat("🔬 Analyzing", dataset_id, "\n")
+    cat("METHOD: Analyzing", dataset_id, "\n")
     
     tryCatch({
       # Auto-detect comparison groups
@@ -73,7 +73,7 @@ comprehensive_differential_expression_pipeline <- function(processed_datasets,
       }
       
       if (is.null(groups)) {
-        cat("⚠️ Could not determine comparison groups for", dataset_id, "\n")
+        cat("WARNING: Could not determine comparison groups for", dataset_id, "\n")
         next
       }
       
@@ -95,11 +95,11 @@ comprehensive_differential_expression_pipeline <- function(processed_datasets,
           camk_results[[dataset_id]] <- camk_subset
         }
         
-        cat("✅ Completed DGE for", dataset_id, ":", nrow(dge_result), "genes analyzed\n")
+        cat("SUCCESS: Completed DGE for", dataset_id, ":", nrow(dge_result), "genes analyzed\n")
       }
       
     }, error = function(e) {
-      cat("❌ Error analyzing", dataset_id, ":", e$message, "\n")
+      cat("ERROR: Error analyzing", dataset_id, ":", e$message, "\n")
     })
   }
   
@@ -325,7 +325,7 @@ comprehensive_meta_analysis_pipeline <- function(dge_results_list,
                                                 effect_size_method = "log_fc",
                                                 min_studies = 2) {
   
-  cat("📈 Comprehensive Meta-Analysis Framework\n")
+  cat("RESULTS: Comprehensive Meta-Analysis Framework\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -342,8 +342,8 @@ comprehensive_meta_analysis_pipeline <- function(dge_results_list,
   
   eligible_genes <- names(gene_study_counts)[gene_study_counts >= min_studies]
   
-  cat("📊 Genes eligible for meta-analysis:", length(eligible_genes), "\n")
-  cat("🎯 CAMK genes in eligible set:", sum(focus_genes %in% eligible_genes), "\n\n")
+  cat("DATA: Genes eligible for meta-analysis:", length(eligible_genes), "\n")
+  cat("TARGET: CAMK genes in eligible set:", sum(focus_genes %in% eligible_genes), "\n\n")
   
   # Perform meta-analysis for each eligible gene
   meta_results <- list()
@@ -373,8 +373,8 @@ comprehensive_meta_analysis_pipeline <- function(dge_results_list,
     })
   }
   
-  cat("✅ Meta-analysis completed for", length(meta_results), "genes\n")
-  cat("🎯 CAMK family results:", length(camk_meta_results), "genes\n")
+  cat("SUCCESS: Meta-analysis completed for", length(meta_results), "genes\n")
+  cat("TARGET: CAMK family results:", length(camk_meta_results), "genes\n")
   
   return(list(
     gene_meta_results = meta_results,
@@ -503,10 +503,10 @@ comprehensive_pathway_analysis_pipeline <- function(dge_results_list,
   
   # Get unique significant genes
   unique_sig_genes <- unique(all_sig_genes)
-  cat("📊 Total significant genes for pathway analysis:", length(unique_sig_genes), "\n")
+  cat("DATA: Total significant genes for pathway analysis:", length(unique_sig_genes), "\n")
   
   if (length(unique_sig_genes) < min_gene_set_size) {
-    cat("⚠️ Too few significant genes for pathway analysis\n")
+    cat("WARNING: Too few significant genes for pathway analysis\n")
     return(NULL)
   }
   
@@ -516,7 +516,7 @@ comprehensive_pathway_analysis_pipeline <- function(dge_results_list,
                       OrgDb = orgdb, drop = TRUE)$ENTREZID
     
     if (length(entrez_ids) < min_gene_set_size) {
-      cat("⚠️ Too few genes could be converted to Entrez IDs\n")
+      cat("WARNING: Too few genes could be converted to Entrez IDs\n")
       return(NULL)
     }
     
@@ -557,18 +557,18 @@ comprehensive_pathway_analysis_pipeline <- function(dge_results_list,
       analysis_time = Sys.time()
     )
     
-    cat("✅ Pathway analysis completed\n")
+    cat("SUCCESS: Pathway analysis completed\n")
     if (!is.null(go_bp)) cat("   GO BP pathways:", nrow(go_bp@result), "\n")
     if (!is.null(go_mf)) cat("   GO MF pathways:", nrow(go_mf@result), "\n")
     if (!is.null(kegg_pathways)) cat("   KEGG pathways:", nrow(kegg_pathways@result), "\n")
     
   }, error = function(e) {
-    cat("❌ Error in pathway analysis:", e$message, "\n")
+    cat("ERROR: Error in pathway analysis:", e$message, "\n")
     pathway_results <- NULL
   })
   
   return(pathway_results)
 }
 
-cat("✅ Comprehensive Analysis Module loaded successfully\n")
-cat("📋 Main functions: comprehensive_differential_expression_pipeline(), comprehensive_meta_analysis_pipeline(), comprehensive_pathway_analysis_pipeline()\n")
+cat("SUCCESS: Comprehensive Analysis Module loaded successfully\n")
+cat("SUMMARY: Main functions: comprehensive_differential_expression_pipeline(), comprehensive_meta_analysis_pipeline(), comprehensive_pathway_analysis_pipeline()\n")

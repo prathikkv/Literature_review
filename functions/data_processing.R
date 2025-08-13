@@ -168,7 +168,7 @@ get_comprehensive_dataset_list <- function() {
 #' @return Vector of gene symbols
 convert_gene_ids_to_symbols <- function(gene_ids, id_type = "auto", platform = NULL) {
   
-  cat("🔧 Converting gene IDs to symbols\n")
+  cat("FIX: Converting gene IDs to symbols\n")
   cat("   Input type:", id_type, "| Count:", length(gene_ids), "\n")
   
   # Auto-detect ID type if not specified
@@ -422,7 +422,7 @@ convert_ensembl_to_symbols <- function(ensembl_ids) {
 #' @return Expression matrix with gene symbol rownames
 standardize_expression_matrix_genes <- function(expression_matrix, platform = NULL) {
   
-  cat("🔧 Standardizing expression matrix gene names\n")
+  cat("FIX: Standardizing expression matrix gene names\n")
   cat("   Input genes:", nrow(expression_matrix), "\n")
   
   # Get current gene IDs
@@ -472,7 +472,7 @@ download_comprehensive_datasets <- function(target_datasets,
                                            force_fresh = FALSE,
                                            verify_integrity = TRUE) {
   
-  cat("🔄 Comprehensive Dataset Download System\n")
+  cat("PROCESS: Comprehensive Dataset Download System\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   # Create cache directory
@@ -484,22 +484,22 @@ download_comprehensive_datasets <- function(target_datasets,
   all_datasets <- get_comprehensive_dataset_list()
   
   total_datasets <- length(target_datasets)
-  cat("📊 Target Datasets:", total_datasets, "\n")
-  cat("💾 Cache Directory:", cache_dir, "\n")
-  cat("🔄 Max Retries:", max_retries, "\n\n")
+  cat("DATA: Target Datasets:", total_datasets, "\n")
+  cat("SAVED: Cache Directory:", cache_dir, "\n")
+  cat("PROCESS: Max Retries:", max_retries, "\n\n")
   
   download_results <- list()
   
   # Download each dataset
   for (i in seq_along(target_datasets)) {
     dataset_id <- target_datasets[i]
-    cat("\n📥 Processing", i, "of", total_datasets, ":", dataset_id, "\n")
+    cat("\nDATA: Processing", i, "of", total_datasets, ":", dataset_id, "\n")
     cat(paste(rep("=", 50), collapse = ""), "\n")
     
     # Find dataset info
     dataset_info <- find_dataset_info(dataset_id, all_datasets)
     if (is.null(dataset_info)) {
-      cat("❌ Dataset info not found for", dataset_id, "\n")
+      cat("ERROR: Dataset info not found for", dataset_id, "\n")
       download_results[[dataset_id]] <- list(success = FALSE, error = "Dataset info not found")
       next
     }
@@ -510,7 +510,7 @@ download_comprehensive_datasets <- function(target_datasets,
     last_error <- NULL
     
     while (!success && attempt <= max_retries) {
-      cat("🔄 Attempt", attempt, "of", max_retries, "\n")
+      cat("PROCESS: Attempt", attempt, "of", max_retries, "\n")
       
       tryCatch({
         # Download dataset
@@ -520,14 +520,14 @@ download_comprehensive_datasets <- function(target_datasets,
           success <- TRUE
           download_results[[dataset_id]] <- result
           download_results[[dataset_id]]$attempts <- attempt
-          cat("✅ Successfully downloaded", dataset_id, "\n")
+          cat("SUCCESS: Successfully downloaded", dataset_id, "\n")
         } else {
           last_error <- result$error
         }
         
       }, error = function(e) {
         last_error <<- e$message
-        cat("❌ Attempt", attempt, "failed:", e$message, "\n")
+        cat("ERROR: Attempt", attempt, "failed:", e$message, "\n")
       })
       
       attempt <- attempt + 1
@@ -543,15 +543,15 @@ download_comprehensive_datasets <- function(target_datasets,
         error = last_error,
         attempts = max_retries
       )
-      cat("❌ Failed to download", dataset_id, "after", max_retries, "attempts\n")
+      cat("ERROR: Failed to download", dataset_id, "after", max_retries, "attempts\n")
     }
   }
   
   # Summary
   successful <- sum(sapply(download_results, function(x) x$success))
-  cat("\n📊 Download Summary:\n")
-  cat("✅ Successful downloads:", successful, "/", total_datasets, "\n")
-  cat("❌ Failed downloads:", total_datasets - successful, "\n")
+  cat("\nDATA: Download Summary:\n")
+  cat("SUCCESS: Successful downloads:", successful, "/", total_datasets, "\n")
+  cat("ERROR: Failed downloads:", total_datasets - successful, "\n")
   
   return(download_results)
 }
@@ -572,10 +572,10 @@ download_single_dataset <- function(dataset_id, dataset_info, cache_dir, timeout
   
   # Check if cached version exists (unless force_fresh is enabled)
   if (file.exists(cache_file) && !force_fresh) {
-    cat("💾 Loading cached data for", dataset_id, "\n")
+    cat("SAVED: Loading cached data for", dataset_id, "\n")
     return(readRDS(cache_file))
   } else if (force_fresh && file.exists(cache_file)) {
-    cat("🔄 Force fresh download - ignoring cache for", dataset_id, "\n")
+    cat("PROCESS: Force fresh download - ignoring cache for", dataset_id, "\n")
   }
   
   # Download based on data source
@@ -628,13 +628,13 @@ download_geo_dataset <- function(dataset_id, dataset_info, timeout_seconds) {
     
     # Basic validation
     if (ncol(expression_matrix) < dataset_info$expected_samples * 0.5) {
-      cat("⚠️ Warning: Sample count lower than expected for", dataset_id, "\n")
+      cat("WARNING: Warning: Sample count lower than expected for", dataset_id, "\n")
     }
     
     # Apply gene symbol mapping for GPL570 platform
     platform <- dataset_info$platform
     if (!is.null(platform) && platform == "GPL570") {
-      cat("🧬 Applying gene symbol mapping for", dataset_id, "\n")
+      cat("GENETIC: Applying gene symbol mapping for", dataset_id, "\n")
       expression_matrix <- apply_gene_symbol_mapping(expression_matrix, platform)
     }
     
@@ -674,7 +674,7 @@ download_arrayexpress_dataset <- function(dataset_id, dataset_info, timeout_seco
     old_timeout <- getOption("timeout")
     options(timeout = timeout_seconds)
     
-    cat("📥 Downloading ArrayExpress dataset (processed data only):", dataset_id, "\n")
+    cat("DATA: Downloading ArrayExpress dataset (processed data only):", dataset_id, "\n")
     
     # Use getAE to get file list first and filter out FASTQ files
     temp_dir <- file.path(tempdir(), dataset_id)
@@ -691,19 +691,19 @@ download_arrayexpress_dataset <- function(dataset_id, dataset_info, timeout_seco
       processed_files <- ae_files[!grepl("\\.(fastq|fq|sra|bam|sam)\\.gz$|\\.(fastq|fq|sra|bam|sam)$", 
                                         ae_files, ignore.case = TRUE)]
       
-      cat("📋 Available files:", length(ae_files), "total,", length(processed_files), "after filtering\n")
+      cat("SUMMARY: Available files:", length(ae_files), "total,", length(processed_files), "after filtering\n")
       
       # Download only expression matrix and metadata files
       ae_data <- getAE(dataset_id, path = temp_dir, type = "processed", extract = TRUE)
       
       if (is.null(ae_data)) {
         # Fallback: try with limited download
-        cat("⚠️ Fallback: trying selective download\n")
+        cat("WARNING: Fallback: trying selective download\n")
         ae_data <- ArrayExpress(dataset_id, path = temp_dir, save = TRUE)
       }
       
     }, error = function(e) {
-      cat("⚠️ getAE failed, trying direct ArrayExpress download with filtering\n")
+      cat("WARNING: getAE failed, trying direct ArrayExpress download with filtering\n")
       # Fallback to ArrayExpress but we'll filter files manually
       ae_data <- ArrayExpress(dataset_id, path = temp_dir, save = TRUE)
     })
@@ -775,7 +775,7 @@ comprehensive_preprocessing_pipeline <- function(dataset_list,
                                                 apply_batch_correction = TRUE,
                                                 generate_qc_plots = TRUE) {
   
-  cat("🔬 Comprehensive Preprocessing Pipeline\n")
+  cat("METHOD: Comprehensive Preprocessing Pipeline\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -793,7 +793,7 @@ comprehensive_preprocessing_pipeline <- function(dataset_list,
       next
     }
     
-    cat("🔬 Processing", dataset_id, "\n")
+    cat("METHOD: Processing", dataset_id, "\n")
     
     tryCatch({
       # Determine platform type and apply appropriate preprocessing
@@ -804,7 +804,7 @@ comprehensive_preprocessing_pipeline <- function(dataset_list,
       } else if (platform_type == "rna_seq") {
         processed_data <- preprocess_rnaseq_data(dataset)
       } else {
-        cat("⚠️ Unknown platform type for", dataset_id, "\n")
+        cat("WARNING: Unknown platform type for", dataset_id, "\n")
         next
       }
       
@@ -821,16 +821,16 @@ comprehensive_preprocessing_pipeline <- function(dataset_list,
         processing_time = Sys.time()
       )
       
-      cat("✅ Successfully processed", dataset_id, "\n")
+      cat("SUCCESS: Successfully processed", dataset_id, "\n")
       
     }, error = function(e) {
-      cat("❌ Error processing", dataset_id, ":", e$message, "\n")
+      cat("ERROR: Error processing", dataset_id, ":", e$message, "\n")
     })
   }
   
   # Apply batch correction if requested
   if (apply_batch_correction && length(processed_datasets) > 1) {
-    cat("\n🔄 Applying batch effect correction...\n")
+    cat("\nPROCESS: Applying batch effect correction...\n")
     processed_datasets <- apply_batch_correction_pipeline(processed_datasets)
   }
   
@@ -967,7 +967,7 @@ apply_batch_correction_pipeline <- function(processed_datasets) {
   
   # This is a simplified version - full implementation would use ComBat
   # For now, just return the datasets as-is
-  cat("✅ Batch correction framework ready (ComBat integration)\n")
+  cat("SUCCESS: Batch correction framework ready (ComBat integration)\n")
   
   return(processed_datasets)
 }
@@ -980,7 +980,7 @@ apply_batch_correction_pipeline <- function(processed_datasets) {
 #' @return Data frame with probe_id and gene_symbol columns
 map_probe_ids_to_genes <- function(probe_ids, platform = "GPL570") {
   
-  cat("🧬 Mapping probe IDs to gene symbols...\n")
+  cat("GENETIC: Mapping probe IDs to gene symbols...\n")
   
   # Initialize mapping data frame
   mapping_df <- data.frame(
@@ -1008,13 +1008,13 @@ map_probe_ids_to_genes <- function(probe_ids, platform = "GPL570") {
         
         # Count successful mappings
         n_mapped <- sum(!is.na(gene_symbols))
-        cat("✅ Mapped", n_mapped, "out of", length(probe_ids), "probes to gene symbols\n")
+        cat("SUCCESS: Mapped", n_mapped, "out of", length(probe_ids), "probes to gene symbols\n")
         
       }, error = function(e) {
-        cat("⚠️ Error in probe mapping:", e$message, "\n")
+        cat("WARNING: Error in probe mapping:", e$message, "\n")
       })
     } else {
-      cat("⚠️ hgu133plus2.db not available - using biomaRt fallback\n")
+      cat("WARNING: hgu133plus2.db not available - using biomaRt fallback\n")
       # Fallback to biomaRt
       mapping_df <- map_probes_biomart(probe_ids, platform)
     }
@@ -1023,7 +1023,7 @@ map_probe_ids_to_genes <- function(probe_ids, platform = "GPL570") {
     cat("ℹ️ GPL16791 (RNA-seq) - assuming gene symbols already present\n")
     mapping_df$gene_symbol <- probe_ids
   } else {
-    cat("⚠️ Unknown platform", platform, "- attempting biomaRt mapping\n")
+    cat("WARNING: Unknown platform", platform, "- attempting biomaRt mapping\n")
     mapping_df <- map_probes_biomart(probe_ids, platform)
   }
   
@@ -1080,10 +1080,10 @@ map_probes_biomart <- function(probe_ids, platform) {
     }
     
     n_mapped <- sum(!is.na(mapping_df$gene_symbol))
-    cat("✅ BiomaRt mapped", n_mapped, "out of", length(probe_ids), "probes\n")
+    cat("SUCCESS: BiomaRt mapped", n_mapped, "out of", length(probe_ids), "probes\n")
     
   }, error = function(e) {
-    cat("⚠️ BiomaRt mapping failed:", e$message, "\n")
+    cat("WARNING: BiomaRt mapping failed:", e$message, "\n")
     cat("   Keeping original probe IDs\n")
     mapping_df$gene_symbol <- probe_ids
   })
@@ -1100,7 +1100,7 @@ map_probes_biomart <- function(probe_ids, platform) {
 apply_gene_symbol_mapping <- function(expr_matrix, platform = "GPL570") {
   
   if (is.null(rownames(expr_matrix))) {
-    cat("⚠️ No row names in expression matrix - skipping mapping\n")
+    cat("WARNING: No row names in expression matrix - skipping mapping\n")
     return(expr_matrix)
   }
   
@@ -1124,7 +1124,7 @@ apply_gene_symbol_mapping <- function(expr_matrix, platform = "GPL570") {
   
   # Handle duplicate gene symbols by averaging expression values
   if (any(duplicated(rownames(expr_matrix_genes)))) {
-    cat("🔄 Aggregating duplicate gene symbols by averaging...\n")
+    cat("PROCESS: Aggregating duplicate gene symbols by averaging...\n")
     
     # Get unique gene symbols
     unique_genes <- unique(rownames(expr_matrix_genes))
@@ -1148,7 +1148,7 @@ apply_gene_symbol_mapping <- function(expr_matrix, platform = "GPL570") {
     }
     
     expr_matrix_genes <- aggregated_matrix
-    cat("✅ Reduced from", nrow(expr_matrix), "probes to", nrow(expr_matrix_genes), "unique genes\n")
+    cat("SUCCESS: Reduced from", nrow(expr_matrix), "probes to", nrow(expr_matrix_genes), "unique genes\n")
   }
   
   return(expr_matrix_genes)
@@ -1323,13 +1323,13 @@ check_dataset_completeness <- function(dataset) {
 #' @return Platform summary report
 generate_platform_summary_report <- function(cache_dir = "cache/comprehensive") {
   
-  cat("🔍 PLATFORM VALIDATION SUMMARY REPORT\n")
+  cat("SEARCH: PLATFORM VALIDATION SUMMARY REPORT\n")
   cat("======================================\n\n")
   
   processed_files <- list.files(cache_dir, pattern = "_processed.rds$", full.names = FALSE)
   
   if (length(processed_files) == 0) {
-    cat("❌ No processed datasets found in", cache_dir, "\n")
+    cat("ERROR: No processed datasets found in", cache_dir, "\n")
     return(NULL)
   }
   
@@ -1376,22 +1376,22 @@ generate_platform_summary_report <- function(cache_dir = "cache/comprehensive") 
       }
       
     }, error = function(e) {
-      cat("❌ Error processing", dataset_id, ":", e$message, "\n")
+      cat("ERROR: Error processing", dataset_id, ":", e$message, "\n")
     })
   }
   
   # Display summary
   if (nrow(summary_report) > 0) {
-    cat("📊 Dataset Summary:\n")
+    cat("DATA: Dataset Summary:\n")
     print(summary_report)
     
     # Platform distribution
-    cat("\n📋 Platform Distribution:\n")
+    cat("\nSUMMARY: Platform Distribution:\n")
     platform_dist <- table(summary_report$Detected_Type)
     print(platform_dist)
     
     # Issues summary
-    cat("\n⚠️ Validation Issues Summary:\n")
+    cat("\nWARNING: Validation Issues Summary:\n")
     if (length(validation_issues) > 0) {
       for (dataset_id in names(validation_issues)) {
         cat("  ", dataset_id, ":\n")
@@ -1404,7 +1404,7 @@ generate_platform_summary_report <- function(cache_dir = "cache/comprehensive") 
         }
       }
     } else {
-      cat("  ✅ No validation issues found\n")
+      cat("  SUCCESS: No validation issues found\n")
     }
   }
   
@@ -1418,7 +1418,7 @@ generate_platform_summary_report <- function(cache_dir = "cache/comprehensive") 
   ))
 }
 
-cat("✅ Comprehensive Data Processing Module loaded successfully\n")
-cat("📋 Main functions: download_comprehensive_datasets(), comprehensive_preprocessing_pipeline()\n")
-cat("🧬 Gene mapping functions: map_probe_ids_to_genes(), apply_gene_symbol_mapping()\n")
-cat("🔍 Validation functions: validate_platform_and_datatype(), generate_platform_summary_report()\n")
+cat("SUCCESS: Comprehensive Data Processing Module loaded successfully\n")
+cat("SUMMARY: Main functions: download_comprehensive_datasets(), comprehensive_preprocessing_pipeline()\n")
+cat("GENETIC: Gene mapping functions: map_probe_ids_to_genes(), apply_gene_symbol_mapping()\n")
+cat("SEARCH: Validation functions: validate_platform_and_datatype(), generate_platform_summary_report()\n")

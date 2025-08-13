@@ -3,22 +3,22 @@
 #' 
 #' Comprehensive validation and testing for the CAMK2D analysis pipeline
 
-cat("🧪 CAMK2D PIPELINE VALIDATION\n")
+cat("TEST: CAMK2D PIPELINE VALIDATION\n")
 cat("==============================\n")
-cat("📅 Started:", Sys.time(), "\n\n")
+cat("TIME: Started:", Sys.time(), "\n\n")
 
 # Load validation functions
-if (file.exists("functions/data_processing.R")) {
-  suppressWarnings(source("functions/data_processing.R"))
+if (file.exists("../../functions/data_processing.R")) {
+  suppressWarnings(source("../../functions/data_processing.R"))
 }
-if (file.exists("functions/analysis.R")) {
-  suppressWarnings(source("functions/analysis.R"))
+if (file.exists("../../functions/analysis.R")) {
+  suppressWarnings(source("../../functions/analysis.R"))
 }
-if (file.exists("functions/visualization.R")) {
-  suppressWarnings(source("functions/visualization.R"))
+if (file.exists("../../functions/visualization.R")) {
+  suppressWarnings(source("../../functions/visualization.R"))
 }
-if (file.exists("functions/utilities.R")) {
-  suppressWarnings(source("functions/utilities.R"))
+if (file.exists("../../functions/utilities.R")) {
+  suppressWarnings(source("../../functions/utilities.R"))
 }
 
 #' Comprehensive Pipeline Validation
@@ -32,7 +32,7 @@ run_comprehensive_validation <- function() {
   # TEST 1: FUNCTION MODULE LOADING
   # ==========================================================================
   
-  cat("📦 TEST 1: FUNCTION MODULE LOADING\n")
+  cat("PACKAGE: TEST 1: FUNCTION MODULE LOADING\n")
   cat("===================================\n")
   
   modules <- c(
@@ -48,10 +48,10 @@ run_comprehensive_validation <- function() {
     cat("Testing", module_name, "...")
     tryCatch({
       source(modules[[module_name]])
-      cat(" ✅\n")
+      cat(" SUCCESS:\n")
       module_status[[module_name]] <- TRUE
     }, error = function(e) {
-      cat(" ❌ Error:", e$message, "\n")
+      cat(" ERROR: Error:", e$message, "\n")
       module_status[[module_name]] <- FALSE
     })
   }
@@ -59,7 +59,7 @@ run_comprehensive_validation <- function() {
   modules_loaded <- sum(unlist(module_status))
   total_modules <- length(module_status)
   
-  cat("\n📊 Module Loading Summary:\n")
+  cat("\nDATA: Module Loading Summary:\n")
   cat("  • Loaded successfully:", modules_loaded, "/", total_modules, "\n")
   cat("  • Success rate:", round(100 * modules_loaded / total_modules, 1), "%\n\n")
   
@@ -74,7 +74,7 @@ run_comprehensive_validation <- function() {
   # TEST 2: CORE FUNCTION AVAILABILITY
   # ==========================================================================
   
-  cat("🔍 TEST 2: CORE FUNCTION AVAILABILITY\n")
+  cat("SEARCH: TEST 2: CORE FUNCTION AVAILABILITY\n")
   cat("=====================================\n")
   
   required_functions <- c(
@@ -93,10 +93,10 @@ run_comprehensive_validation <- function() {
   for (func_name in required_functions) {
     cat("Checking", func_name, "...")
     if (exists(func_name)) {
-      cat(" ✅\n")
+      cat(" SUCCESS:\n")
       function_status[[func_name]] <- TRUE
     } else {
-      cat(" ❌\n")
+      cat(" ERROR:\n")
       function_status[[func_name]] <- FALSE
     }
   }
@@ -104,7 +104,7 @@ run_comprehensive_validation <- function() {
   functions_available <- sum(unlist(function_status))
   total_functions <- length(function_status)
   
-  cat("\n📊 Function Availability Summary:\n")
+  cat("\nDATA: Function Availability Summary:\n")
   cat("  • Available functions:", functions_available, "/", total_functions, "\n")
   cat("  • Success rate:", round(100 * functions_available / total_functions, 1), "%\n\n")
   
@@ -119,7 +119,7 @@ run_comprehensive_validation <- function() {
   # TEST 3: PACKAGE DEPENDENCIES
   # ==========================================================================
   
-  cat("📦 TEST 3: PACKAGE DEPENDENCIES\n")
+  cat("PACKAGE: TEST 3: PACKAGE DEPENDENCIES\n")
   cat("===============================\n")
   
   critical_packages <- c(
@@ -132,10 +132,10 @@ run_comprehensive_validation <- function() {
   for (pkg in critical_packages) {
     cat("Checking", pkg, "...")
     if (requireNamespace(pkg, quietly = TRUE)) {
-      cat(" ✅\n")
+      cat(" SUCCESS:\n")
       package_status[[pkg]] <- TRUE
     } else {
-      cat(" ❌\n")
+      cat(" ERROR:\n")
       package_status[[pkg]] <- FALSE
     }
   }
@@ -143,7 +143,7 @@ run_comprehensive_validation <- function() {
   packages_available <- sum(unlist(package_status))
   total_packages <- length(package_status)
   
-  cat("\n📊 Package Dependencies Summary:\n")
+  cat("\nDATA: Package Dependencies Summary:\n")
   cat("  • Available packages:", packages_available, "/", total_packages, "\n")
   cat("  • Success rate:", round(100 * packages_available / total_packages, 1), "%\n\n")
   
@@ -158,7 +158,7 @@ run_comprehensive_validation <- function() {
   # TEST 4: CAMK GENE LIST VALIDATION
   # ==========================================================================
   
-  cat("🧬 TEST 4: CAMK GENE LIST VALIDATION\n")
+  cat("GENETIC: TEST 4: CAMK GENE LIST VALIDATION\n")
   cat("====================================\n")
   
   if (exists("get_camk_family_genes")) {
@@ -171,7 +171,7 @@ run_comprehensive_validation <- function() {
     
     core_genes_present <- sum(expected_camk_genes %in% camk_genes)
     
-    cat("✅ Core CAMK genes present:", core_genes_present, "/", length(expected_camk_genes), "\n\n")
+    cat("SUCCESS: Core CAMK genes present:", core_genes_present, "/", length(expected_camk_genes), "\n\n")
     
     validation_results$camk_genes <- list(
       genes_available = length(camk_genes),
@@ -179,7 +179,7 @@ run_comprehensive_validation <- function() {
       gene_list = camk_genes
     )
   } else {
-    cat("❌ get_camk_family_genes() function not available\n\n")
+    cat("ERROR: get_camk_family_genes() function not available\n\n")
     validation_results$camk_genes <- list(
       genes_available = 0,
       core_genes_present = 0,
@@ -191,7 +191,7 @@ run_comprehensive_validation <- function() {
   # TEST 5: DATASET CONFIGURATION
   # ==========================================================================
   
-  cat("📊 TEST 5: DATASET CONFIGURATION\n")
+  cat("DATA: TEST 5: DATASET CONFIGURATION\n")
   cat("================================\n")
   
   if (exists("get_comprehensive_dataset_list")) {
@@ -218,7 +218,7 @@ run_comprehensive_validation <- function() {
     
     key_datasets_present <- sum(expected_datasets %in% all_dataset_ids)
     
-    cat("✅ Key datasets from prompts.md:", key_datasets_present, "/", length(expected_datasets), "\n\n")
+    cat("SUCCESS: Key datasets from prompts.md:", key_datasets_present, "/", length(expected_datasets), "\n\n")
     
     validation_results$dataset_configuration <- list(
       total_datasets = total_datasets,
@@ -228,7 +228,7 @@ run_comprehensive_validation <- function() {
       key_datasets_present = key_datasets_present
     )
   } else {
-    cat("❌ get_comprehensive_dataset_list() function not available\n\n")
+    cat("ERROR: get_comprehensive_dataset_list() function not available\n\n")
     validation_results$dataset_configuration <- list(
       total_datasets = 0,
       key_datasets_present = 0
@@ -239,7 +239,7 @@ run_comprehensive_validation <- function() {
   # TEST 6: OUTPUT DIRECTORIES
   # ==========================================================================
   
-  cat("📁 TEST 6: OUTPUT DIRECTORY STRUCTURE\n")
+  cat("SAVED: TEST 6: OUTPUT DIRECTORY STRUCTURE\n")
   cat("=====================================\n")
   
   required_dirs <- c("cache", "data", "output", "results")
@@ -247,10 +247,10 @@ run_comprehensive_validation <- function() {
   
   for (dir_name in required_dirs) {
     if (dir.exists(dir_name)) {
-      cat("✅ Directory exists:", dir_name, "\n")
+      cat("SUCCESS: Directory exists:", dir_name, "\n")
       existing_dirs <- c(existing_dirs, dir_name)
     } else {
-      cat("⚠️ Directory missing:", dir_name, "(will be created during analysis)\n")
+      cat("WARNING: Directory missing:", dir_name, "(will be created during analysis)\n")
     }
   }
   
@@ -266,7 +266,7 @@ run_comprehensive_validation <- function() {
   # OVERALL VALIDATION ASSESSMENT
   # ==========================================================================
   
-  cat("🏆 OVERALL VALIDATION ASSESSMENT\n")
+  cat("ACHIEVEMENT: OVERALL VALIDATION ASSESSMENT\n")
   cat("================================\n")
   
   # Calculate overall scores
@@ -276,7 +276,7 @@ run_comprehensive_validation <- function() {
   
   overall_score <- (module_score + function_score + package_score) / 3
   
-  cat("📊 Validation Scores:\n")
+  cat("DATA: Validation Scores:\n")
   cat("  • Module Loading:", round(module_score, 1), "%\n")
   cat("  • Function Availability:", round(function_score, 1), "%\n")
   cat("  • Package Dependencies:", round(package_score, 1), "%\n")
@@ -284,19 +284,19 @@ run_comprehensive_validation <- function() {
   
   # Assessment
   if (overall_score >= 95) {
-    cat("🎉 VALIDATION PASSED: Pipeline ready for production use!\n")
-    cat("✅ All critical components are functional\n")
-    cat("✅ Ready for comprehensive CAMK2D analysis\n")
+    cat("COMPLETE: VALIDATION PASSED: Pipeline ready for production use!\n")
+    cat("SUCCESS: All critical components are functional\n")
+    cat("SUCCESS: Ready for comprehensive CAMK2D analysis\n")
     status <- "PASSED"
   } else if (overall_score >= 85) {
-    cat("⚠️ VALIDATION MOSTLY PASSED: Minor issues detected\n")
-    cat("💡 Pipeline functional with some limitations\n")
-    cat("🔧 Consider addressing missing components\n")
+    cat("WARNING: VALIDATION MOSTLY PASSED: Minor issues detected\n")
+    cat("INSIGHT: Pipeline functional with some limitations\n")
+    cat("FIX: Consider addressing missing components\n")
     status <- "MOSTLY_PASSED"
   } else {
-    cat("❌ VALIDATION FAILED: Significant issues detected\n")
-    cat("🔧 Multiple components require attention\n")
-    cat("💡 Run setup.R to install missing dependencies\n")
+    cat("ERROR: VALIDATION FAILED: Significant issues detected\n")
+    cat("FIX: Multiple components require attention\n")
+    cat("INSIGHT: Run setup.R to install missing dependencies\n")
     status <- "FAILED"
   }
   
@@ -349,18 +349,18 @@ save_validation_report <- function(validation_results) {
     "",
     "NEXT STEPS:",
     if (validation_results$overall_assessment$status == "PASSED") {
-      "✅ Pipeline ready - execute: Rscript run_pipeline.R"
+      "SUCCESS: Pipeline ready - execute: Rscript run_pipeline.R"
     } else if (validation_results$overall_assessment$status == "MOSTLY_PASSED") {
-      "⚠️ Consider running: Rscript setup.R to address missing components"
+      "WARNING: Consider running: Rscript setup.R to address missing components"
     } else {
-      "❌ Run: Rscript setup.R to install missing dependencies"
+      "ERROR: Run: Rscript setup.R to install missing dependencies"
     }
   )
   
   # Save text report
   writeLines(report_lines, "output/validation_report.txt")
   
-  cat("📁 Validation report saved to: output/validation_report.txt\n")
+  cat("SAVED: Validation report saved to: output/validation_report.txt\n")
 }
 
 # =============================================================================
@@ -373,23 +373,23 @@ if (!interactive()) {
     validation_results <- run_comprehensive_validation()
     save_validation_report(validation_results)
     
-    cat("\n📅 Validation completed:", Sys.time(), "\n")
+    cat("\nTIME: Validation completed:", Sys.time(), "\n")
     
     if (validation_results$overall_assessment$status == "PASSED") {
-      cat("🎯 Next step: Rscript run_pipeline.R\n")
+      cat("TARGET: Next step: Rscript run_pipeline.R\n")
     } else {
-      cat("🔧 Next step: Rscript setup.R\n")
+      cat("FIX: Next step: Rscript setup.R\n")
     }
     
   }, error = function(e) {
-    cat("❌ Validation error:", e$message, "\n")
+    cat("ERROR: Validation error:", e$message, "\n")
     quit(status = 1)
   })
 } else {
-  cat("✅ Validation script loaded and ready\n")
-  cat("🧪 Run validation: validation_results <- run_comprehensive_validation()\n")
+  cat("SUCCESS: Validation script loaded and ready\n")
+  cat("TEST: Run validation: validation_results <- run_comprehensive_validation()\n")
 }
 
-cat("\n🧪 CAMK2D PIPELINE VALIDATION SYSTEM\n")
-cat("✨ Comprehensive Testing and Quality Assurance\n")
-cat("✨ Production-Ready Validation Framework\n\n")
+cat("\nTEST: CAMK2D PIPELINE VALIDATION SYSTEM\n")
+cat("ENHANCED: Comprehensive Testing and Quality Assurance\n")
+cat("ENHANCED: Production-Ready Validation Framework\n\n")

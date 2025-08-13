@@ -22,7 +22,7 @@ comprehensive_ortholog_mapping <- function(gene_lists,
                                          output_dir = "data/ortholog_mappings",
                                          create_unified_matrix = TRUE) {
   
-  cat("🧬 Cross-Species Ortholog Mapping\n")
+  cat("GENETIC: Cross-Species Ortholog Mapping\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -31,7 +31,7 @@ comprehensive_ortholog_mapping <- function(gene_lists,
   
   tryCatch({
     # Connect to biomaRt
-    cat("🔗 Connecting to biomaRt databases...\n")
+    cat("LINK: Connecting to biomaRt databases...\n")
     
     # Human database
     human_mart <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
@@ -43,7 +43,7 @@ comprehensive_ortholog_mapping <- function(gene_lists,
     rat_mart <- tryCatch({
       useMart("ensembl", dataset = "rnorvegicus_gene_ensembl")
     }, error = function(e) {
-      cat("⚠️ Rat database not available, continuing with human-mouse mapping\n")
+      cat("WARNING: Rat database not available, continuing with human-mouse mapping\n")
       NULL
     })
     
@@ -68,13 +68,13 @@ comprehensive_ortholog_mapping <- function(gene_lists,
     saveRDS(ortholog_results, results_file)
     saveRDS(camk_orthologs, camk_file)
     
-    cat("✅ Ortholog mapping completed successfully\n")
-    cat("📁 Results saved to:", output_dir, "\n")
+    cat("SUCCESS: Ortholog mapping completed successfully\n")
+    cat("SAVED: Results saved to:", output_dir, "\n")
     
     return(ortholog_results)
     
   }, error = function(e) {
-    cat("❌ Error in ortholog mapping:", e$message, "\n")
+    cat("ERROR: Error in ortholog mapping:", e$message, "\n")
     return(NULL)
   })
 }
@@ -97,7 +97,7 @@ create_cross_reference_table <- function(gene_lists, human_mart, mouse_mart, rat
   
   # Map human to mouse
   if (length(human_genes) > 0 && length(mouse_genes) > 0) {
-    cat("🔄 Mapping human to mouse orthologs...\n")
+    cat("PROCESS: Mapping human to mouse orthologs...\n")
     
     human_to_mouse <- getBM(
       attributes = c("external_gene_name", "mmusculus_homolog_associated_gene_name"),
@@ -121,7 +121,7 @@ create_cross_reference_table <- function(gene_lists, human_mart, mouse_mart, rat
     }
   }
   
-  cat("✅ Cross-reference table created with", nrow(cross_ref), "ortholog pairs\n")
+  cat("SUCCESS: Cross-reference table created with", nrow(cross_ref), "ortholog pairs\n")
   return(cross_ref)
 }
 
@@ -134,7 +134,7 @@ create_cross_reference_table <- function(gene_lists, human_mart, mouse_mart, rat
 #' @return CAMK ortholog mapping
 map_camk_orthologs <- function(camk_genes, human_mart, mouse_mart, rat_mart = NULL) {
   
-  cat("🎯 Mapping CAMK family orthologs...\n")
+  cat("TARGET: Mapping CAMK family orthologs...\n")
   
   camk_orthologs <- data.frame()
   
@@ -170,7 +170,7 @@ map_camk_orthologs <- function(camk_genes, human_mart, mouse_mart, rat_mart = NU
     })
   }
   
-  cat("✅ CAMK ortholog mapping completed:", nrow(camk_orthologs), "orthologs found\n")
+  cat("SUCCESS: CAMK ortholog mapping completed:", nrow(camk_orthologs), "orthologs found\n")
   return(camk_orthologs)
 }
 
@@ -189,7 +189,7 @@ large_scale_database_integration <- function(focus_genes = get_camk_family_genes
                                            max_samples = 10000,
                                            enable_parallel = FALSE) {
   
-  cat("🌐 Large-Scale Database Integration Framework\n")
+  cat("NETWORK: Large-Scale Database Integration Framework\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -199,21 +199,21 @@ large_scale_database_integration <- function(focus_genes = get_camk_family_genes
   integration_results <- list()
   
   # ARCHS4 Integration Framework
-  cat("📊 ARCHS4 Integration Framework Ready\n")
+  cat("DATA: ARCHS4 Integration Framework Ready\n")
   archs4_status <- setup_archs4_integration(output_dir, max_samples)
   integration_results$archs4_status <- archs4_status
   
   # GTEx Integration Framework
-  cat("🧬 GTEx Integration Framework Ready\n")
+  cat("GENETIC: GTEx Integration Framework Ready\n")
   gtex_status <- setup_gtex_integration(output_dir, cardiac_keywords)
   integration_results$gtex_status <- gtex_status
   
   # Human Protein Atlas Integration
-  cat("🔬 HPA Integration Framework Ready\n")
+  cat("METHOD: HPA Integration Framework Ready\n")
   hpa_status <- setup_hpa_integration(focus_genes, output_dir)
   integration_results$hpa_status <- hpa_status
   
-  cat("✅ Large-scale integration frameworks deployed\n")
+  cat("SUCCESS: Large-scale integration frameworks deployed\n")
   
   return(integration_results)
 }
@@ -239,7 +239,7 @@ setup_archs4_integration <- function(output_dir, max_samples) {
     notes = "Requires HDF5 library and substantial disk space"
   )
   
-  cat("💡 ARCHS4 framework configured (requires manual data download)\n")
+  cat("INSIGHT: ARCHS4 framework configured (requires manual data download)\n")
   return(archs4_config)
 }
 
@@ -259,7 +259,7 @@ setup_gtex_integration <- function(output_dir, cardiac_keywords) {
     notes = "Ready for recount3 integration"
   )
   
-  cat("💡 GTEx framework configured (recount3 ready)\n")
+  cat("INSIGHT: GTEx framework configured (recount3 ready)\n")
   return(gtex_config)
 }
 
@@ -280,7 +280,7 @@ setup_hpa_integration <- function(focus_genes, output_dir) {
     notes = "API access ready for real-time queries"
   )
   
-  cat("💡 HPA framework configured (API ready)\n")
+  cat("INSIGHT: HPA framework configured (API ready)\n")
   return(hpa_config)
 }
 
@@ -299,7 +299,7 @@ comprehensive_drug_target_pipeline <- function(phosphoproteomics_results = NULL,
                                               output_dir = "results/drug_targets",
                                               include_repurposing = TRUE) {
   
-  cat("💊 Comprehensive Drug Target Analysis Pipeline\n")
+  cat("DRUGS: Comprehensive Drug Target Analysis Pipeline\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -335,7 +335,7 @@ comprehensive_drug_target_pipeline <- function(phosphoproteomics_results = NULL,
   results_file <- file.path(output_dir, "comprehensive_drug_targets.rds")
   saveRDS(drug_target_results, results_file)
   
-  cat("✅ Drug target analysis framework deployed\n")
+  cat("SUCCESS: Drug target analysis framework deployed\n")
   return(drug_target_results)
 }
 
@@ -423,7 +423,7 @@ comprehensive_phosphoproteomics_pipeline <- function(dge_results_list = NULL,
                                                     output_dir = "results/phosphoproteomics",
                                                     cardiac_focus = TRUE) {
   
-  cat("🧪 Comprehensive Phosphoproteomics Analysis\n")
+  cat("TEST: Comprehensive Phosphoproteomics Analysis\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -454,7 +454,7 @@ comprehensive_phosphoproteomics_pipeline <- function(dge_results_list = NULL,
   results_file <- file.path(output_dir, "phosphoproteomics_analysis.rds")
   saveRDS(phospho_results, results_file)
   
-  cat("✅ Phosphoproteomics analysis framework deployed\n")
+  cat("SUCCESS: Phosphoproteomics analysis framework deployed\n")
   return(phospho_results)
 }
 
@@ -525,5 +525,5 @@ analyze_substrate_expression <- function(substrates, dge_results_list) {
   return(substrate_expression)
 }
 
-cat("✅ Comprehensive Utilities Module loaded successfully\n")
-cat("📋 Main functions: comprehensive_ortholog_mapping(), large_scale_database_integration(), comprehensive_drug_target_pipeline()\n")
+cat("SUCCESS: Comprehensive Utilities Module loaded successfully\n")
+cat("SUMMARY: Main functions: comprehensive_ortholog_mapping(), large_scale_database_integration(), comprehensive_drug_target_pipeline()\n")

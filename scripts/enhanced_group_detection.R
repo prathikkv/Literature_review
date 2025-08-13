@@ -4,9 +4,16 @@
 #' Adds proper healthy vs disease group detection to the analysis functions
 
 # Load required functions
-source("functions/analysis.R")
+# Detect the correct path for functions directory
+if (file.exists("../functions/analysis.R")) {
+  source("../functions/analysis.R")
+} else if (file.exists("../../functions/analysis.R")) {
+  source("../../functions/analysis.R") 
+} else {
+  source("functions/analysis.R")
+}
 
-cat("🎯 ENHANCED HEALTHY VS DISEASE GROUP DETECTION\n")
+cat("TARGET: ENHANCED HEALTHY VS DISEASE GROUP DETECTION\n")
 cat("==============================================\n\n")
 
 # Enhanced auto_detect_groups function with healthy vs disease focus
@@ -19,7 +26,7 @@ enhanced_auto_detect_groups <- function(dataset) {
     return(NULL)
   }
   
-  cat("🔍 Analyzing phenotype data for healthy vs disease patterns...\n")
+  cat("SEARCH: Analyzing phenotype data for healthy vs disease patterns...\n")
   cat("   Samples:", nrow(pheno_data), "\n")
   cat("   Columns:", ncol(pheno_data), "\n")
   
@@ -57,7 +64,7 @@ enhanced_auto_detect_groups <- function(dataset) {
             
             groups_final <- as.factor(groups[valid_samples])
             
-            cat("     ✅ HEALTHY VS DISEASE pattern detected!\n")
+            cat("     SUCCESS: HEALTHY VS DISEASE pattern detected!\n")
             cat("       Healthy samples:", sum(groups == "Healthy"), "\n")
             cat("       Disease samples:", sum(groups == "Disease"), "\n")
             
@@ -111,7 +118,7 @@ enhanced_auto_detect_groups <- function(dataset) {
           if (sum(valid_samples) >= 10) {
             groups_final <- as.factor(groups[valid_samples])
             
-            cat("     ✅ General healthy vs disease pattern detected!\n")
+            cat("     SUCCESS: General healthy vs disease pattern detected!\n")
             cat("       Healthy samples:", sum(groups == "Healthy"), "\n") 
             cat("       Disease samples:", sum(groups == "Disease"), "\n")
             
@@ -130,7 +137,7 @@ enhanced_auto_detect_groups <- function(dataset) {
       groups <- as.factor(values)
       group_counts <- table(groups)
       if (length(group_counts) >= 2 && min(group_counts) >= 3 && max(group_counts) <= nrow(pheno_data) * 0.8) {
-        cat("     ✅ Traditional groups detected:", names(group_counts), "\n")
+        cat("     SUCCESS: Traditional groups detected:", names(group_counts), "\n")
         return(list(groups = groups, column = col, pattern_type = "traditional"))
       }
     }
@@ -145,23 +152,23 @@ enhanced_auto_detect_groups <- function(dataset) {
       
       groups <- ifelse(grepl("AF|fibrillation", sample_info, ignore.case = TRUE), "AF", "SR")
       if (length(unique(groups)) >= 2) {
-        cat("   ✅ AF/SR pattern detected (fallback)\n")
+        cat("   SUCCESS: AF/SR pattern detected (fallback)\n")
         return(list(groups = as.factor(groups), column = "auto_detected", pattern_type = "AF_SR"))
       }
     }
   }
   
-  cat("   ❌ No suitable groups detected\n")
+  cat("   ERROR: No suitable groups detected\n")
   return(NULL)
 }
 
 # Test the enhanced function on GSE57338
-cat("🧪 Testing enhanced group detection on GSE57338...\n")
+cat("TEST: Testing enhanced group detection on GSE57338...\n")
 gse57338 <- readRDS("cache/comprehensive/GSE57338_processed.rds")
 detected_groups <- enhanced_auto_detect_groups(gse57338)
 
 if (!is.null(detected_groups)) {
-  cat("✅ SUCCESS! Groups detected:\n")
+  cat("SUCCESS: SUCCESS! Groups detected:\n")
   cat("   Pattern type:", detected_groups$pattern_type, "\n")
   cat("   Column used:", detected_groups$column, "\n") 
   cat("   Group distribution:\n")
@@ -171,8 +178,8 @@ if (!is.null(detected_groups)) {
     cat("   Samples to include:", length(detected_groups$sample_indices), "out of", nrow(gse57338$phenotype_data), "\n")
   }
 } else {
-  cat("❌ No groups detected\n")
+  cat("ERROR: No groups detected\n")
 }
 
-cat("\n✅ Enhanced group detection function ready!\n")
-cat("🎯 This enables proper healthy vs disease DGE analysis\n")
+cat("\nSUCCESS: Enhanced group detection function ready!\n")
+cat("TARGET: This enables proper healthy vs disease DGE analysis\n")

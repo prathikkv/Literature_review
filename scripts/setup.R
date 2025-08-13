@@ -3,9 +3,9 @@
 #' 
 #' Installs all required packages and configures the analysis environment
 
-cat("🔧 CAMK2D ANALYSIS PIPELINE SETUP\n")
+cat("FIX: CAMK2D ANALYSIS PIPELINE SETUP\n")
 cat("==================================\n")
-cat("📅 Started:", Sys.time(), "\n\n")
+cat("TIME: Started:", Sys.time(), "\n\n")
 
 # Set options for installation
 options(repos = c(CRAN = "https://cran.r-project.org"))
@@ -13,7 +13,7 @@ options(timeout = 600)
 
 # Function to install packages with error handling
 install_package_safely <- function(package_name, source = "CRAN") {
-  cat("📦 Installing", package_name, "from", source, "...")
+  cat("PACKAGE: Installing", package_name, "from", source, "...")
   
   tryCatch({
     if (source == "CRAN") {
@@ -28,10 +28,10 @@ install_package_safely <- function(package_name, source = "CRAN") {
         BiocManager::install(package_name, dependencies = TRUE)
       }
     }
-    cat(" ✅\n")
+    cat(" SUCCESS:\n")
     return(TRUE)
   }, error = function(e) {
-    cat(" ❌ Error:", e$message, "\n")
+    cat(" ERROR: Error:", e$message, "\n")
     return(FALSE)
   })
 }
@@ -56,30 +56,30 @@ bioc_packages <- c(
   "WGCNA", "KEGGREST", "recount3", "rhdf5", "sva", "ChemmineR"
 )
 
-cat("🔧 Installing CRAN packages...\n")
+cat("FIX: Installing CRAN packages...\n")
 cran_success <- sum(sapply(cran_packages, function(pkg) install_package_safely(pkg, "CRAN")))
 
-cat("\n🧬 Installing Bioconductor packages...\n")
+cat("\nGENETIC: Installing Bioconductor packages...\n")
 bioc_success <- sum(sapply(bioc_packages, function(pkg) install_package_safely(pkg, "Bioconductor")))
 
 # Test core package loading
-cat("\n🧪 Testing core package loading...\n")
+cat("\nTEST: Testing core package loading...\n")
 core_test_packages <- c("GEOquery", "limma", "tidyverse", "metafor", "clusterProfiler")
 working_packages <- sum(sapply(core_test_packages, function(pkg) requireNamespace(pkg, quietly = TRUE)))
 
-cat("\n📊 SETUP SUMMARY\n")
+cat("\nDATA: SETUP SUMMARY\n")
 cat("================\n")
 cat("CRAN packages installed:", cran_success, "/", length(cran_packages), "\n")
 cat("Bioconductor packages installed:", bioc_success, "/", length(bioc_packages), "\n") 
 cat("Core packages working:", working_packages, "/", length(core_test_packages), "\n")
 
 if (working_packages == length(core_test_packages)) {
-  cat("\n🎉 SUCCESS: Setup completed successfully!\n")
-  cat("✅ Pipeline is ready for execution\n")
-  cat("🚀 Next step: Rscript run_pipeline.R\n")
+  cat("\nCELEBRATE: SUCCESS: Setup completed successfully!\n")
+  cat("SUCCESS: Pipeline is ready for execution\n")
+  cat("LAUNCH: Next step: Rscript run_pipeline.R\n")
 } else {
-  cat("\n⚠️ WARNING: Some packages failed to install\n")
-  cat("🔧 Please check error messages above\n")
+  cat("\nWARNING: WARNING: Some packages failed to install\n")
+  cat("FIX: Please check error messages above\n")
 }
 
-cat("\n📅 Setup completed:", Sys.time(), "\n")
+cat("\nTIME: Setup completed:", Sys.time(), "\n")

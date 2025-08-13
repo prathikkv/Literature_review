@@ -35,7 +35,7 @@ comprehensive_reporting_pipeline <- function(analysis_results,
                                             generate_interactive = TRUE,
                                             generate_publications = TRUE) {
   
-  cat("📊 Comprehensive Reporting Pipeline\n")
+  cat("DATA: Comprehensive Reporting Pipeline\n")
   cat(paste(rep("=", 50), collapse = ""), "\n\n")
   
   if (!dir.exists(output_dir)) {
@@ -45,30 +45,30 @@ comprehensive_reporting_pipeline <- function(analysis_results,
   reporting_results <- list()
   
   # Generate comprehensive Excel workbook
-  cat("📊 Creating comprehensive Excel workbook...\n")
+  cat("DATA: Creating comprehensive Excel workbook...\n")
   excel_file <- create_comprehensive_excel_workbook(analysis_results, output_dir)
   reporting_results$excel_workbook <- excel_file
   
   # Generate interactive HTML report
   if (generate_interactive) {
-    cat("🌐 Creating interactive HTML report...\n")
+    cat("NETWORK: Creating interactive HTML report...\n")
     html_file <- create_comprehensive_html_report(analysis_results, output_dir)
     reporting_results$html_report <- html_file
   }
   
   # Generate publication-quality figures
   if (generate_publications) {
-    cat("🎨 Creating publication figures...\n")
+    cat("VISUAL: Creating publication figures...\n")
     figure_dir <- create_publication_figures(analysis_results, output_dir)
     reporting_results$publication_figures <- figure_dir
   }
   
   # Generate summary statistics
-  cat("📈 Creating analysis summary...\n")
+  cat("RESULTS: Creating analysis summary...\n")
   summary_file <- create_analysis_summary(analysis_results, output_dir)
   reporting_results$summary_report <- summary_file
   
-  cat("✅ Comprehensive reporting complete!\n")
+  cat("SUCCESS: Comprehensive reporting complete!\n")
   return(reporting_results)
 }
 
@@ -478,10 +478,10 @@ generate_html_report_content <- function(analysis_results, plots) {
     </style>
 </head>
 <body>
-    <h1>🎯 Comprehensive CAMK2D Multi-Species Cardiovascular Analysis</h1>
+    <h1>TARGET: Comprehensive CAMK2D Multi-Species Cardiovascular Analysis</h1>
     
     <div class="summary-box">
-        <h2>📊 Executive Summary</h2>
+        <h2>DATA: Executive Summary</h2>
         <p><strong class="highlight">Implementation Status:</strong> <span class="success">100% Complete</span></p>
         <p><strong>Scientific Focus:</strong> CAMK2D and family members in atrial fibrillation and heart failure</p>
         <p><strong>Multi-Species Analysis:</strong> Human, mouse, and rat cardiovascular datasets</p>
@@ -490,9 +490,9 @@ generate_html_report_content <- function(analysis_results, plots) {
         <p><strong>Analysis Scope:</strong> 10 CAMK family genes with cross-species validation</p>
     </div>
     
-    <h2>📈 Key Findings</h2>
+    <h2>RESULTS: Key Findings</h2>
     <div class="summary-box">
-        <h3>🧬 CAMK2D Expression Patterns</h3>
+        <h3>GENETIC: CAMK2D Expression Patterns</h3>
         <ul>
             <li><strong>Cardiac Specificity:</strong> High expression in cardiac tissue across species</li>
             <li><strong>Disease Association:</strong> Differential expression in both AF and HF</li>
@@ -500,7 +500,7 @@ generate_html_report_content <- function(analysis_results, plots) {
             <li><strong>Statistical Significance:</strong> Robust findings across multiple independent studies</li>
         </ul>
         
-        <h3>🎯 Therapeutic Implications</h3>
+        <h3>TARGET: Therapeutic Implications</h3>
         <ul>
             <li><strong>Drug Target Potential:</strong> High druggability scores for CAMK2D and CAMK2A</li>
             <li><strong>Known Compounds:</strong> KN-62, KN-93 show inhibitory activity</li>
@@ -509,7 +509,7 @@ generate_html_report_content <- function(analysis_results, plots) {
         </ul>
     </div>
     
-    <h2>📊 Interactive Visualizations</h2>
+    <h2>DATA: Interactive Visualizations</h2>
     
     <div class="plot-container">
         <h3>Differential Expression: CAMK Family in Cardiovascular Disease</h3>
@@ -524,7 +524,7 @@ generate_html_report_content <- function(analysis_results, plots) {
         <div id="expression-plot" style="height: 500px;"></div>
     </div>
     
-    <h2>🔬 Methodology</h2>
+    <h2>METHOD: Methodology</h2>
     <div class="summary-box">
         <h3>Data Sources & Processing</h3>
         <table>
@@ -538,7 +538,7 @@ generate_html_report_content <- function(analysis_results, plots) {
         </table>
     </div>
     
-    <h2>📋 Results Summary</h2>
+    <h2>SUMMARY: Results Summary</h2>
     <div class="summary-box">
         <h3>Pipeline Performance Metrics</h3>
         <ul>
@@ -555,7 +555,7 @@ generate_html_report_content <- function(analysis_results, plots) {
         </ul>
     </div>
     
-    <h2>🎯 Clinical Translation</h2>
+    <h2>TARGET: Clinical Translation</h2>
     <div class="summary-box">
         <p><strong>This comprehensive analysis provides robust evidence for CAMK2D as a therapeutic target 
         in cardiovascular disease.</strong> The pipeline demonstrates:</p>
@@ -775,5 +775,5 @@ create_analysis_summary <- function(analysis_results, output_dir) {
   return(summary_file)
 }
 
-cat("✅ Comprehensive Visualization and Reporting Module loaded successfully\n")
-cat("🎉 Ready to generate publication-quality reports and interactive dashboards!\n")
+cat("SUCCESS: Comprehensive Visualization and Reporting Module loaded successfully\n")
+cat("CELEBRATE: Ready to generate publication-quality reports and interactive dashboards!\n")

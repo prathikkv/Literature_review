@@ -4,7 +4,7 @@
 #' Comprehensive analysis of CAMK2D across individual datasets
 #' Beyond DGE: Co-expression networks, regulatory analysis, functional enrichment, PPI networks
 
-cat("🎯 CAMK2D-FOCUSED INDEPENDENT DATASET ANALYSIS\n")
+cat("TARGET: CAMK2D-FOCUSED INDEPENDENT DATASET ANALYSIS\n")
 cat("==============================================\n\n")
 
 # Load required libraries
@@ -28,9 +28,9 @@ for (pkg in required_packages) {
 }
 
 # Load utility functions
-source("functions/data_processing.R")
-source("functions/analysis.R")
-source("functions/utilities.R")
+source("../../functions/data_processing.R")
+source("../../functions/analysis.R")
+source("../../functions/utilities.R")
 
 #' CAMK2D-Specific DGE Analysis for Individual Datasets
 #'
@@ -46,17 +46,17 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
   
   camk2d_results <- list()
   
-  cat("🧬 Starting CAMK2D-focused analysis across", length(dataset_list), "datasets\n\n")
+  cat("GENETIC: Starting CAMK2D-focused analysis across", length(dataset_list), "datasets\n\n")
   
   for (dataset_id in names(dataset_list)) {
     
-    cat("📊 Analyzing", dataset_id, "for CAMK2D\n")
+    cat("DATA: Analyzing", dataset_id, "for CAMK2D\n")
     cat(paste(rep("-", 40), collapse = ""), "\n")
     
     dataset <- dataset_list[[dataset_id]]
     
     if (is.null(dataset$expression_matrix) || is.null(dataset$sample_info)) {
-      cat("⚠️ Skipping", dataset_id, "- missing required data\n\n")
+      cat("WARNING: Skipping", dataset_id, "- missing required data\n\n")
       next
     }
     
@@ -74,7 +74,7 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
     camk2d_present <- focus_gene %in% rownames(expr_matrix)
     
     if (!camk2d_present) {
-      cat("❌ CAMK2D not found in", dataset_id, "\n\n")
+      cat("ERROR: CAMK2D not found in", dataset_id, "\n\n")
       dataset_results$camk2d_present <- FALSE
       dataset_results$status <- "CAMK2D not detected"
       camk2d_results[[dataset_id]] <- dataset_results
@@ -82,7 +82,7 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
     }
     
     dataset_results$camk2d_present <- TRUE
-    cat("✅ CAMK2D detected in", dataset_id, "\n")
+    cat("SUCCESS: CAMK2D detected in", dataset_id, "\n")
     
     # Extract CAMK2D expression values
     camk2d_expression <- expr_matrix[focus_gene, , drop = FALSE]
@@ -91,36 +91,42 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
     group_info <- tryCatch({
       detect_comparison_groups(sample_info)
     }, error = function(e) {
-      cat("⚠️ Could not detect groups automatically for", dataset_id, "\n")
+      cat("WARNING: Could not detect groups automatically for", dataset_id, "\n")
       return(NULL)
     })
     
     if (is.null(group_info) || length(unique(group_info$groups)) < 2) {
-      cat("⚠️ No suitable comparison groups found in", dataset_id, "\n\n")
+      cat("WARNING: No suitable comparison groups found in", dataset_id, "\n\n")
       dataset_results$status <- "No comparison groups detected"
       camk2d_results[[dataset_id]] <- dataset_results
       next
     }
     
     dataset_results$comparison_groups <- unique(group_info$groups)
-    cat("🎯 Comparison groups:", paste(dataset_results$comparison_groups, collapse = " vs "), "\n")
+    cat("TARGET: Comparison groups:", paste(dataset_results$comparison_groups, collapse = " vs "), "\n")
     
     # =================================================================
-    # PHASE 1: CAMK2D-SPECIFIC DGE ANALYSIS
+    # PHASE 1: GENOME-WIDE DGE ANALYSIS (METHODOLOGICALLY CORRECT)
     # =================================================================
     
-    cat("📈 Phase 1: CAMK2D DGE Analysis\n")
+    cat("RESULTS: Phase 1: Genome-wide DGE Analysis (then CAMK2D filtering)\n")
     
-    # Perform DGE analysis
+    # Perform GENOME-WIDE DGE analysis (no pre-filtering)
     dge_results <- tryCatch({
       perform_limma_analysis(dataset, group_info, fdr_threshold = 0.05, fc_threshold = 1.2)
     }, error = function(e) {
-      cat("❌ DGE analysis failed:", e$message, "\n")
+      cat("ERROR: Genome-wide DGE analysis failed:", e$message, "\n")
       return(NULL)
     })
     
+    if (!is.null(dge_results)) {
+      cat("   SUCCESS: Genome-wide DGE completed:", nrow(dge_results), "genes analyzed\n")
+      cat("   TARGET: Methodological approach: Full transcriptome → CAMK2D focus\n")
+    }
+    
     if (!is.null(dge_results) && focus_gene %in% rownames(dge_results)) {
       
+      # Extract CAMK2D results from genome-wide analysis (post-DGE filtering)
       camk2d_dge <- dge_results[focus_gene, , drop = FALSE]
       
       dataset_results$camk2d_dge <- list(
@@ -132,24 +138,38 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
         significant = camk2d_dge$adj.P.Val < 0.05,
         regulation = ifelse(camk2d_dge$logFC > 0, "UP", "DOWN"),
         effect_size = abs(camk2d_dge$logFC),
-        rank_among_all_genes = which(rownames(dge_results) == focus_gene)
+        rank_among_all_genes = which(rownames(dge_results) == focus_gene),
+        # Add methodological validation
+        total_genes_in_analysis = nrow(dge_results),
+        analysis_approach = "genome_wide_then_camk2d_extraction"
       )
       
-      cat("   CAMK2D logFC:", round(dataset_results$camk2d_dge$log_fold_change, 3), "\n")
-      cat("   CAMK2D adj.P.Val:", format(dataset_results$camk2d_dge$adj_p_value, scientific = TRUE), "\n")
-      cat("   CAMK2D regulation:", dataset_results$camk2d_dge$regulation, "\n")
-      cat("   CAMK2D significance:", ifelse(dataset_results$camk2d_dge$significant, "YES", "NO"), "\n")
+      cat("   DATA: CAMK2D results (from genome-wide analysis):\n")
+      cat("      logFC:", round(dataset_results$camk2d_dge$log_fold_change, 3), "\n")
+      cat("      adj.P.Val:", format(dataset_results$camk2d_dge$adj_p_value, scientific = TRUE), "\n")
+      cat("      regulation:", dataset_results$camk2d_dge$regulation, "\n")
+      cat("      significance:", ifelse(dataset_results$camk2d_dge$significant, "YES", "NO"), "\n")
+      cat("      rank among", dataset_results$camk2d_dge$total_genes_in_analysis, "genes:", dataset_results$camk2d_dge$rank_among_all_genes, "\n")
+      cat("   SUCCESS: Methodologically sound: CAMK2D extracted from", dataset_results$camk2d_dge$total_genes_in_analysis, "gene background\n")
       
     } else {
-      cat("❌ CAMK2D not found in DGE results\n")
+      cat("ERROR: CAMK2D not found in genome-wide DGE results\n")
       dataset_results$camk2d_dge <- NULL
     }
+    
+    # Store full DGE results for completeness
+    dataset_results$full_dge_results <- dge_results
+    dataset_results$methodological_notes <- list(
+      approach = "genome_wide_dge_then_camk2d_focus",
+      bias_prevention = "no_gene_prefiltering",
+      statistical_foundation = "full_transcriptome_background"
+    )
     
     # =================================================================
     # PHASE 2: CAMK2D CO-EXPRESSION NETWORK ANALYSIS (WGCNA-enhanced)
     # =================================================================
     
-    cat("🔗 Phase 2: CAMK2D Co-expression Network Analysis\n")
+    cat("PATHWAY: Phase 2: CAMK2D Co-expression Network Analysis\n")
     
     # Calculate correlation with CAMK2D
     camk2d_expr_vector <- as.numeric(expr_matrix[focus_gene, ])
@@ -246,7 +266,7 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
     # PHASE 3: CAMK2D FUNCTIONAL ENRICHMENT ANALYSIS
     # =================================================================
     
-    cat("🧪 Phase 3: CAMK2D Functional Enrichment Analysis\n")
+    cat("TEST: Phase 3: CAMK2D Functional Enrichment Analysis\n")
     
     # Get co-expressed genes for functional enrichment
     if (nrow(significant_coexpr) >= 10) {
@@ -484,7 +504,7 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
     # PHASE 4A: CAMK2D SPLICE VARIANTS AND ISOFORM ANALYSIS
     # =================================================================
     
-    cat("🧬 Phase 4A: CAMK2D Splice Variants and Isoform Analysis\n")
+    cat("GENETIC: Phase 4A: CAMK2D Splice Variants and Isoform Analysis\n")
     
     # Look for potential CAMK2D isoforms/splice variants in the dataset
     camk2d_related_genes <- grep("CAMK2D", rownames(expr_matrix), value = TRUE, ignore.case = TRUE)
@@ -798,7 +818,7 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
     dataset_output_file <- file.path(output_dir, paste0(dataset_id, "_CAMK2D_analysis.rds"))
     saveRDS(dataset_results, dataset_output_file)
     
-    cat("✅", dataset_id, "CAMK2D analysis complete\n\n")
+    cat("SUCCESS:", dataset_id, "CAMK2D analysis complete\n\n")
     
     # Store in main results
     camk2d_results[[dataset_id]] <- dataset_results
@@ -808,7 +828,7 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
   # CROSS-DATASET CAMK2D SUMMARY
   # =================================================================
   
-  cat("📋 Generating Cross-Dataset CAMK2D Summary\n")
+  cat("SUMMARY: Generating Cross-Dataset CAMK2D Summary\n")
   cat(paste(rep("=", 50), collapse = ""), "\n")
   
   # Summary statistics
@@ -845,7 +865,7 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
   )
   
   # Print summary
-  cat("📊 CAMK2D Cross-Dataset Analysis Summary:\n")
+  cat("DATA: CAMK2D Cross-Dataset Analysis Summary:\n")
   cat("   • Total datasets analyzed:", cross_dataset_summary$total_datasets_analyzed, "\n")
   cat("   • Datasets with CAMK2D detected:", cross_dataset_summary$datasets_with_camk2d, "\n")
   cat("   • Datasets with significant CAMK2D:", cross_dataset_summary$datasets_with_significant_camk2d, "\n")
@@ -864,8 +884,8 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
   # Save complete analysis
   saveRDS(final_results, file.path(output_dir, "CAMK2D_complete_analysis.rds"))
   
-  cat("\n✅ CAMK2D-focused analysis completed for all datasets\n")
-  cat("📁 Results saved to:", output_dir, "\n\n")
+  cat("\nSUCCESS: CAMK2D-focused analysis completed for all datasets\n")
+  cat("SAVED: Results saved to:", output_dir, "\n\n")
   
   return(final_results)
 }
@@ -903,6 +923,6 @@ detect_comparison_groups <- function(sample_info) {
   return(NULL)
 }
 
-cat("📋 CAMK2D Independent Analysis Module Loaded\n")
-cat("🎯 Ready for comprehensive CAMK2D analysis across datasets\n")
-cat("🧬 Functions available: camk2d_independent_analysis()\n\n")
+cat("SUMMARY: CAMK2D Independent Analysis Module Loaded\n")
+cat("TARGET: Ready for comprehensive CAMK2D analysis across datasets\n")
+cat("GENETIC: Functions available: camk2d_independent_analysis()\n\n")

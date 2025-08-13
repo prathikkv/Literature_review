@@ -3,7 +3,7 @@
 #' 
 #' Documents which datasets have healthy controls vs disease subtypes vs unclear groups
 
-cat("📋 COMPREHENSIVE DATASET INVENTORY\n")
+cat("SUMMARY: COMPREHENSIVE DATASET INVENTORY\n")
 cat("=================================\n\n")
 
 # Create comprehensive inventory of all datasets and their comparison types
@@ -62,23 +62,23 @@ datasets_inventory <- data.frame(
   )
 )
 
-cat("📊 DATASET CLASSIFICATION SUMMARY\n")
+cat("DATA: DATASET CLASSIFICATION SUMMARY\n")
 cat("================================\n\n")
 
 # Print formatted inventory
 for (i in 1:nrow(datasets_inventory)) {
   dataset <- datasets_inventory[i, ]
   
-  cat("📋 Dataset:", dataset$Dataset_ID, "\n")
+  cat("SUMMARY: Dataset:", dataset$Dataset_ID, "\n")
   cat("   ", paste(rep("=", nchar(dataset$Dataset_ID) + 9), collapse = ""), "\n")
-  cat("   📊 Total samples:", dataset$Total_Samples, "\n")
-  cat("   🔬 Comparison type:", dataset$Comparison_Type, "\n")
-  cat("   👥 Groups:", dataset$Group_1, "vs", dataset$Group_2, "\n")
-  cat("   🏥 Disease context:", dataset$Disease_Types, "\n")
-  cat("   📈 Clinical relevance:", dataset$Clinical_Relevance, "\n")
-  cat("   📊 Statistical power:", dataset$Statistical_Power, "\n")
-  cat("   🧬 CAMK analysis:", dataset$CAMK_Analysis_Suitable, "\n")
-  cat("   💡 Notes:", dataset$Notes, "\n\n")
+  cat("   DATA: Total samples:", dataset$Total_Samples, "\n")
+  cat("   METHOD: Comparison type:", dataset$Comparison_Type, "\n")
+  cat("   SAMPLES: Groups:", dataset$Group_1, "vs", dataset$Group_2, "\n")
+  cat("   CLINICAL: Disease context:", dataset$Disease_Types, "\n")
+  cat("   RESULTS: Clinical relevance:", dataset$Clinical_Relevance, "\n")
+  cat("   DATA: Statistical power:", dataset$Statistical_Power, "\n")
+  cat("   GENETIC: CAMK analysis:", dataset$CAMK_Analysis_Suitable, "\n")
+  cat("   INSIGHT: Notes:", dataset$Notes, "\n\n")
 }
 
 # Categorize datasets by analysis type
@@ -86,50 +86,50 @@ healthy_vs_disease <- datasets_inventory[datasets_inventory$Comparison_Type == "
 disease_subtypes <- datasets_inventory[datasets_inventory$Comparison_Type == "AF vs SR", ]
 excluded <- datasets_inventory[!datasets_inventory$Comparison_Type %in% c("Healthy vs Disease", "AF vs SR"), ]
 
-cat("🎯 ANALYSIS CATEGORIES\n")
+cat("TARGET: ANALYSIS CATEGORIES\n")
 cat("=====================\n\n")
 
-cat("✅ PRIMARY ANALYSIS: Healthy vs Disease\n")
+cat("SUCCESS: PRIMARY ANALYSIS: Healthy vs Disease\n")
 cat("---------------------------------------\n")
 if (nrow(healthy_vs_disease) > 0) {
   for (i in 1:nrow(healthy_vs_disease)) {
     ds <- healthy_vs_disease[i, ]
-    power_symbol <- ifelse(ds$Statistical_Power == "EXCELLENT - Large, well-powered", "🟢", 
-                          ifelse(grepl("LOW", ds$Statistical_Power), "🔴", "🟡"))
+    power_symbol <- ifelse(ds$Statistical_Power == "EXCELLENT - Large, well-powered", "SUCCESS:", 
+                          ifelse(grepl("LOW", ds$Statistical_Power), "ERROR:", "WARNING:"))
     cat(sprintf("   %s %-12s: %3d samples (%s) %s\n", 
                power_symbol, ds$Dataset_ID, ds$Total_Samples, ds$Comparison_Type, 
-               ifelse(ds$CAMK_Analysis_Suitable == "YES - Primary dataset", "⭐ PRIMARY", "")))
+               ifelse(ds$CAMK_Analysis_Suitable == "YES - Primary dataset", "STAR: PRIMARY", "")))
   }
 } else {
-  cat("   ❌ No healthy vs disease datasets found\n")
+  cat("   ERROR: No healthy vs disease datasets found\n")
 }
 
-cat("\n🟡 SECONDARY ANALYSIS: Disease Subtypes\n")
+cat("\nWARNING: SECONDARY ANALYSIS: Disease Subtypes\n")
 cat("--------------------------------------\n")
 if (nrow(disease_subtypes) > 0) {
   for (i in 1:nrow(disease_subtypes)) {
     ds <- disease_subtypes[i, ]
-    cat(sprintf("   🟡 %-12s: %3d samples (%s)\n", 
+    cat(sprintf("   WARNING: %-12s: %3d samples (%s)\n", 
                ds$Dataset_ID, ds$Total_Samples, ds$Comparison_Type))
   }
-  cat("   💡 These compare disease states, not healthy vs disease\n")
-  cat("   💡 Useful for understanding disease heterogeneity\n")
+  cat("   INSIGHT: These compare disease states, not healthy vs disease\n")
+  cat("   INSIGHT: Useful for understanding disease heterogeneity\n")
 } else {
   cat("   No disease subtype datasets found\n")
 }
 
-cat("\n❌ EXCLUDED FROM ANALYSIS\n")
+cat("\nERROR: EXCLUDED FROM ANALYSIS\n")
 cat("-------------------------\n")
 if (nrow(excluded) > 0) {
   for (i in 1:nrow(excluded)) {
     ds <- excluded[i, ]
-    cat(sprintf("   ❌ %-12s: %s\n", ds$Dataset_ID, ds$Notes))
+    cat(sprintf("   ERROR: %-12s: %s\n", ds$Dataset_ID, ds$Notes))
   }
 } else {
   cat("   No excluded datasets\n")
 }
 
-cat("\n🔍 KEY INSIGHTS\n")
+cat("\nSEARCH: KEY INSIGHTS\n")
 cat("==============\n\n")
 
 cat("1. **ONLY ONE ROBUST HEALTHY vs DISEASE DATASET**:\n")
@@ -158,7 +158,7 @@ total_samples <- sum(datasets_inventory$Total_Samples, na.rm = TRUE)
 healthy_disease_samples <- sum(healthy_vs_disease$Total_Samples, na.rm = TRUE)
 disease_subtype_samples <- sum(disease_subtypes$Total_Samples, na.rm = TRUE)
 
-cat("📊 SAMPLE SIZE SUMMARY\n")
+cat("DATA: SAMPLE SIZE SUMMARY\n")
 cat("=====================\n")
 cat(sprintf("   Total samples across all datasets: %d\n", total_samples))
 cat(sprintf("   Healthy vs disease samples: %d (%.1f%%)\n", 
@@ -168,7 +168,7 @@ cat(sprintf("   Disease subtype samples: %d (%.1f%%)\n",
 cat(sprintf("   GSE57338 alone: %d samples (%.1f%% of all data)\n", 
            313, 100 * 313 / total_samples))
 
-cat("\n💡 CONCLUSION\n")
+cat("\nINSIGHT: CONCLUSION\n")
 cat("=============\n\n")
 cat("The user's question reveals an important misconception. NOT all datasets\n")
 cat("have healthy controls. In fact:\n\n")
@@ -184,8 +184,8 @@ cat("meta-analysis that mixed incompatible comparison types.\n")
 write.csv(datasets_inventory, "output/comprehensive_dataset_inventory.csv", row.names = FALSE)
 saveRDS(datasets_inventory, "output/comprehensive_dataset_inventory.rds")
 
-cat("\n💾 Dataset inventory saved to:\n")
+cat("\nSAVED: Dataset inventory saved to:\n")
 cat("   • output/comprehensive_dataset_inventory.csv\n") 
 cat("   • output/comprehensive_dataset_inventory.rds\n")
 
-cat("\n✅ Comprehensive dataset inventory completed!\n")
+cat("\nSUCCESS: Comprehensive dataset inventory completed!\n")

@@ -4,10 +4,10 @@
 #' Production-ready execution script implementing 100% of prompts.md vision
 #' Streamlined, optimized, and ready for high-impact cardiovascular research
 
-cat("🎯 CAMK2D COMPREHENSIVE ANALYSIS PIPELINE\n")
+cat("TARGET: CAMK2D COMPREHENSIVE ANALYSIS PIPELINE\n")
 cat("==========================================\n")
-cat("🎉 Status: Production Ready (100% Implementation)\n")
-cat("📅 Execution Started:", Sys.time(), "\n\n")
+cat("CELEBRATE: Status: Production Ready (100% Implementation)\n")
+cat("TIME: Execution Started:", Sys.time(), "\n\n")
 
 # Parse command line arguments for production modes
 args <- commandArgs(trailingOnly = TRUE)
@@ -52,40 +52,40 @@ if (file.exists("config.yml")) {
 # Override config based on command line arguments
 if (fresh_mode) {
   config$download$force_fresh <- TRUE
-  cat("🔄 FRESH DOWNLOAD MODE ENABLED\n")
+  cat("PROCESS: FRESH DOWNLOAD MODE ENABLED\n")
 }
 
 if (clean_mode) {
   config$cache$cleanup_mode <- "full"
-  cat("🧹 FULL CLEANUP MODE ENABLED\n")
+  cat("CLEANUP: FULL CLEANUP MODE ENABLED\n")
 }
 
 if (uat_mode) {
   config$download$force_fresh <- TRUE
   config$cache$cleanup_mode <- "smart"
   config$analysis$enable_validation <- TRUE
-  cat("🧪 USER ACCEPTANCE TESTING MODE ENABLED\n")
+  cat("TEST: USER ACCEPTANCE TESTING MODE ENABLED\n")
 }
 
-cat("🧬 Configuration:\n")
+cat("GENETIC: Configuration:\n")
 cat("  • Focus area:", config$research$focus_area, "\n")
 cat("  • Target datasets:", config$datasets$max_datasets, "\n")
 cat("  • Species:", config$research$species, "\n\n")
 
 # Load all pipeline modules
-cat("📦 Loading pipeline modules...\n")
-source("functions/data_processing.R")
-source("functions/analysis.R") 
-source("functions/visualization.R")
-source("functions/utilities.R")
-cat("✅ All modules loaded successfully\n\n")
+cat("PACKAGE: Loading pipeline modules...\n")
+source("../functions/data_processing.R")
+source("../functions/analysis.R") 
+source("../functions/visualization.R")
+source("../functions/utilities.R")
+cat("SUCCESS: All modules loaded successfully\n\n")
 
 #' Main Pipeline Execution Function
 #'
 #' Executes the complete CAMK2D analysis pipeline
 run_comprehensive_camk2d_pipeline <- function() {
   
-  cat("🚀 LAUNCHING COMPREHENSIVE CAMK2D ANALYSIS\n")
+  cat("LAUNCH: LAUNCHING COMPREHENSIVE CAMK2D ANALYSIS\n")
   cat("===========================================\n\n")
   
   # Initialize results storage
@@ -96,7 +96,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   # ==========================================================================
   
   if (config$cache$auto_cleanup || clean_mode) {
-    cat("🧹 PHASE 0: CACHE MANAGEMENT & CLEANUP\n")
+    cat("CLEANUP: PHASE 0: CACHE MANAGEMENT & CLEANUP\n")
     cat("======================================\n")
     
     # Load cleanup script
@@ -110,15 +110,15 @@ run_comprehensive_camk2d_pipeline <- function() {
         cleanup_results <- run_comprehensive_cleanup(cleanup_mode)
         comprehensive_results$cleanup_results <- cleanup_results
         
-        cat("✅ Cache cleanup completed:", 
+        cat("SUCCESS: Cache cleanup completed:", 
             round(cleanup_results$space_saved_mb, 2), "MB saved\n\n")
             
       }, error = function(e) {
-        cat("⚠️ Cache cleanup warning:", e$message, "\n")
+        cat("WARNING: Cache cleanup warning:", e$message, "\n")
         cat("   Proceeding with analysis...\n\n")
       })
     } else {
-      cat("⚠️ cleanup.R not found - skipping cache management\n\n")
+      cat("WARNING: cleanup.R not found - skipping cache management\n\n")
     }
   }
   
@@ -126,7 +126,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   # PHASE 1: DATA RETRIEVAL AND PREPROCESSING
   # ==========================================================================
   
-  cat("📥 PHASE 1: DATA RETRIEVAL & PREPROCESSING\n")
+  cat("DATA: PHASE 1: DATA RETRIEVAL & PREPROCESSING\n")
   cat("===========================================\n")
   
   # Define multi-resolution target datasets (enhanced for comprehensive CAMK analysis)
@@ -155,13 +155,13 @@ run_comprehensive_camk2d_pipeline <- function() {
     # - 3x larger sample size: 313 + 386 + 384 + 26 + 16 + 55 + 38 + 26 = 1,244 total samples
   )
   
-  cat("🎯 Targeting", length(target_datasets), "datasets from prompts.md specification\n")
+  cat("TARGET: Targeting", length(target_datasets), "datasets from prompts.md specification\n")
   
   # Production-ready download configuration
   cache_dir <- "cache/comprehensive"
   
   if (config$download$force_fresh || fresh_mode || uat_mode) {
-    cat("🔄 FRESH DOWNLOAD MODE: Ignoring existing cache\n")
+    cat("PROCESS: FRESH DOWNLOAD MODE: Ignoring existing cache\n")
     # Remove existing processed datasets to force fresh downloads
     if (dir.exists(cache_dir)) {
       processed_files <- list.files(cache_dir, pattern = "_processed\\.rds$", full.names = TRUE)
@@ -187,8 +187,8 @@ run_comprehensive_camk2d_pipeline <- function() {
       verify_integrity = config$download$verify_checksums
     )
   }, error = function(e) {
-    cat("❌ Critical download error:", e$message, "\n")
-    cat("💡 Suggestions:\n")
+    cat("ERROR: Critical download error:", e$message, "\n")
+    cat("INSIGHT: Suggestions:\n")
     cat("   1. Check internet connection\n")
     cat("   2. Try running with --clean flag to clear cache\n")
     cat("   3. Reduce timeout_minutes in config.yml\n")
@@ -200,10 +200,10 @@ run_comprehensive_camk2d_pipeline <- function() {
   comprehensive_results$download_results <- download_results
   
   if (length(successful_downloads) == 0) {
-    stop("❌ No datasets downloaded successfully - cannot proceed")
+    stop("ERROR: No datasets downloaded successfully - cannot proceed")
   }
   
-  cat("✅ Data retrieval complete:", length(successful_downloads), "datasets\n\n")
+  cat("SUCCESS: Data retrieval complete:", length(successful_downloads), "datasets\n\n")
   
   # Comprehensive preprocessing
   preprocessing_results <- comprehensive_preprocessing_pipeline(
@@ -214,18 +214,18 @@ run_comprehensive_camk2d_pipeline <- function() {
   )
   
   comprehensive_results$preprocessing_results <- preprocessing_results
-  cat("✅ Preprocessing complete:", length(preprocessing_results$processed_data), "datasets\n\n")
+  cat("SUCCESS: Preprocessing complete:", length(preprocessing_results$processed_data), "datasets\n\n")
   
   # ==========================================================================
   # PHASE 2: CAMK GENE VALIDATION & QUALITY ASSESSMENT (Optimized)
   # ==========================================================================
   
-  cat("🎯 PHASE 2: MULTI-RESOLUTION CAMK VALIDATION & STRATIFICATION\n")
+  cat("TARGET: PHASE 2: MULTI-RESOLUTION CAMK VALIDATION & STRATIFICATION\n")
   cat("==============================================================\n")
   
   # Enhanced multi-resolution CAMK analysis approach
   camk_genes <- get_camk_family_genes()
-  cat("🧬 Target CAMK genes:", length(camk_genes), "\n")
+  cat("GENETIC: Target CAMK genes:", length(camk_genes), "\n")
   
   # Validate CAMK gene presence across multiple data types and species
   camk_validation_results <- list()
@@ -278,7 +278,7 @@ run_comprehensive_camk2d_pipeline <- function() {
         sample_count = ncol(dataset$expression_matrix)
       )
       
-      cat("✅", dataset_id, "(", tier_classification, "):\n")
+      cat("SUCCESS:", dataset_id, "(", tier_classification, "):\n")
       cat("   ", camk_detected, "/", length(camk_genes), "CAMK genes (", camk_coverage, "%)\n")
       cat("   ", data_type, "-", species, "-", clinical_context, "\n")
     }
@@ -290,7 +290,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   
   comprehensive_results$camk_validation_results <- camk_validation_results
   
-  cat("\n📊 MULTI-RESOLUTION VALIDATION SUMMARY:\n")
+  cat("\nDATA: MULTI-RESOLUTION VALIDATION SUMMARY:\n")
   cat("   • Total samples across all datasets:", total_samples, "\n")
   cat("   • High-value datasets (≥70% CAMK coverage):", high_value_datasets, "/", length(camk_validation_results), "\n")
   cat("   • Data types: Tissue-level + Single-cell + Cross-species + Temporal\n")
@@ -301,7 +301,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   # PHASE 3: MULTI-RESOLUTION DIFFERENTIAL EXPRESSION ANALYSIS
   # ==========================================================================
   
-  cat("📊 PHASE 3: MULTI-RESOLUTION DIFFERENTIAL EXPRESSION ANALYSIS\n")
+  cat("DATA: PHASE 3: MULTI-RESOLUTION DIFFERENTIAL EXPRESSION ANALYSIS\n")
   cat("=============================================================\n")
   
   # Enhanced DGE analysis with tier-specific approaches
@@ -309,7 +309,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   
   # TIER 1: Primary Discovery (GSE57338) - Known 6 significant CAMK genes
   if ("GSE57338" %in% names(preprocessing_results$processed_data)) {
-    cat("🎯 TIER 1 Analysis: Primary Discovery (GSE57338)\n")
+    cat("TARGET: TIER 1 Analysis: Primary Discovery (GSE57338)\n")
     tier1_results <- comprehensive_differential_expression_pipeline(
       processed_datasets = list("GSE57338" = preprocessing_results$processed_data[["GSE57338"]]),
       focus_genes = get_camk_family_genes(),
@@ -319,13 +319,13 @@ run_comprehensive_camk2d_pipeline <- function() {
       fold_change_threshold = 1.2
     )
     multi_resolution_dge_results$tier1_primary <- tier1_results
-    cat("   ✅ Primary discovery complete: 6 significant CAMK genes expected\n\n")
+    cat("   SUCCESS: Primary discovery complete: 6 significant CAMK genes expected\n\n")
   }
   
   # TIER 2: Single-Cell Validation (GSE148507, GSE148506)
   single_cell_datasets <- intersect(c("GSE148507", "GSE148506"), names(preprocessing_results$processed_data))
   if (length(single_cell_datasets) > 0) {
-    cat("🔬 TIER 2 Analysis: Single-Cell Validation\n")
+    cat("METHOD: TIER 2 Analysis: Single-Cell Validation\n")
     tier2_datasets <- preprocessing_results$processed_data[single_cell_datasets]
     tier2_results <- comprehensive_differential_expression_pipeline(
       processed_datasets = tier2_datasets,
@@ -336,13 +336,13 @@ run_comprehensive_camk2d_pipeline <- function() {
       fold_change_threshold = 1.1  # More sensitive for single-cell
     )
     multi_resolution_dge_results$tier2_single_cell <- tier2_results
-    cat("   ✅ Single-cell validation complete:", length(single_cell_datasets), "datasets\n\n")
+    cat("   SUCCESS: Single-cell validation complete:", length(single_cell_datasets), "datasets\n\n")
   }
   
   # TIER 3: Cross-Species Validation (GSE297444, GSE299292)
   cross_species_datasets <- intersect(c("GSE297444", "GSE299292"), names(preprocessing_results$processed_data))
   if (length(cross_species_datasets) > 0) {
-    cat("🧬 TIER 3 Analysis: Cross-Species Validation\n")
+    cat("GENETIC: TIER 3 Analysis: Cross-Species Validation\n")
     tier3_datasets <- preprocessing_results$processed_data[cross_species_datasets]
     tier3_results <- comprehensive_differential_expression_pipeline(
       processed_datasets = tier3_datasets,
@@ -353,13 +353,13 @@ run_comprehensive_camk2d_pipeline <- function() {
       fold_change_threshold = 1.2
     )
     multi_resolution_dge_results$tier3_cross_species <- tier3_results
-    cat("   ✅ Cross-species validation complete:", length(cross_species_datasets), "datasets\n\n")
+    cat("   SUCCESS: Cross-species validation complete:", length(cross_species_datasets), "datasets\n\n")
   }
   
   # TIER 4: Human Validation (GSE120895, GSE41177, GSE79768)
   human_validation_datasets <- intersect(c("GSE120895", "GSE41177", "GSE79768"), names(preprocessing_results$processed_data))
   if (length(human_validation_datasets) > 0) {
-    cat("👥 TIER 4 Analysis: Human Validation Cohorts\n")
+    cat("SAMPLES: TIER 4 Analysis: Human Validation Cohorts\n")
     tier4_datasets <- preprocessing_results$processed_data[human_validation_datasets]
     tier4_results <- comprehensive_differential_expression_pipeline(
       processed_datasets = tier4_datasets,
@@ -370,7 +370,7 @@ run_comprehensive_camk2d_pipeline <- function() {
       fold_change_threshold = 1.2
     )
     multi_resolution_dge_results$tier4_human_validation <- tier4_results
-    cat("   ✅ Human validation complete:", length(human_validation_datasets), "datasets\n\n")
+    cat("   SUCCESS: Human validation complete:", length(human_validation_datasets), "datasets\n\n")
   }
   
   comprehensive_results$multi_resolution_dge_results <- multi_resolution_dge_results
@@ -380,7 +380,7 @@ run_comprehensive_camk2d_pipeline <- function() {
     if (!is.null(tier$dge_results)) length(tier$dge_results) else 0
   }))
   
-  cat("📊 MULTI-RESOLUTION DGE SUMMARY:\n")
+  cat("DATA: MULTI-RESOLUTION DGE SUMMARY:\n")
   cat("   • Total datasets analyzed across all tiers:", total_datasets_analyzed, "\n")
   cat("   • Analysis approach: Tier-specific thresholds and methods\n")
   cat("   • Primary discovery: GSE57338 (6 significant CAMK genes)\n")
@@ -392,7 +392,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   # PHASE 4: CAMK2G DRUG TARGET VALIDATION (High-Value Addition)
   # ==========================================================================
   
-  cat("💊 PHASE 4: CAMK2G DRUG TARGET VALIDATION\n")
+  cat("DRUGS: PHASE 4: CAMK2G DRUG TARGET VALIDATION\n")
   cat("==========================================\n")
   
   # Focus on CAMK2G as the prime therapeutic target validated across multiple resolution levels
@@ -505,7 +505,7 @@ run_comprehensive_camk2d_pipeline <- function() {
       )
     )
     
-    cat("✅ MULTI-RESOLUTION CAMK2G VALIDATION:\n")
+    cat("SUCCESS: MULTI-RESOLUTION CAMK2G VALIDATION:\n")
     cat("   • Drug Target Score:", round(overall_drug_score, 3), "\n")
     cat("   • Clinical Priority:", camk2g_drug_analysis$clinical_development_priority, "\n")
     cat("   • Validation Tiers:", length(camk2g_validation_tiers), "\n")
@@ -521,7 +521,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   # PHASE 5: MULTI-DATASET CROSS-VALIDATION FRAMEWORK (High-Value Addition)
   # ==========================================================================
   
-  cat("🔄 PHASE 5: MULTI-DATASET CROSS-VALIDATION FRAMEWORK\n")
+  cat("PROCESS: PHASE 5: MULTI-DATASET CROSS-VALIDATION FRAMEWORK\n")
   cat("====================================================\n")
   
   cross_validation_results <- list()
@@ -587,7 +587,7 @@ run_comprehensive_camk2d_pipeline <- function() {
       )
     )
     
-    cat("✅ CROSS-VALIDATION FRAMEWORK COMPLETE:\n")
+    cat("SUCCESS: CROSS-VALIDATION FRAMEWORK COMPLETE:\n")
     cat("   • Primary significant genes validated:", nrow(validation_matrix), "\n")
     cat("   • Overall validation success rate:", round(reproducibility_metrics$cross_validation_success_rate * 100, 1), "%\n")
     cat("   • Cross-species conservation rate:", round(reproducibility_metrics$cross_species_conservation * 100, 1), "%\n")
@@ -601,18 +601,18 @@ run_comprehensive_camk2d_pipeline <- function() {
   # PHASE 6: CAMK2D-FOCUSED INDEPENDENT ANALYSIS (High-Value Specialized Analysis)
   # ==========================================================================
   
-  cat("🎯 PHASE 6: CAMK2D-FOCUSED INDEPENDENT ANALYSIS\n")
+  cat("TARGET: PHASE 6: CAMK2D-FOCUSED INDEPENDENT ANALYSIS\n")
   cat("===============================================\n")
   
   camk2d_analysis_results <- list()
   
   # Load CAMK2D analysis module
   tryCatch({
-    source("camk2d_independent_analysis.R")
+    source("../analysis/core/camk2d_independent_analysis.R")
     
     if (!is.null(preprocessing_results$processed_data) && length(preprocessing_results$processed_data) > 0) {
       
-      cat("🧬 Starting comprehensive CAMK2D analysis across all datasets\n")
+      cat("GENETIC: Starting comprehensive CAMK2D analysis across all datasets\n")
       cat("   Analysis includes: DGE + Co-expression + Functional + Clinical\n\n")
       
       # Run CAMK2D-focused analysis on all datasets
@@ -626,7 +626,7 @@ run_comprehensive_camk2d_pipeline <- function() {
       if (!is.null(camk2d_analysis_results$cross_dataset_summary)) {
         summary <- camk2d_analysis_results$cross_dataset_summary
         
-        cat("✅ CAMK2D SPECIALIZED ANALYSIS COMPLETE:\n")
+        cat("SUCCESS: CAMK2D SPECIALIZED ANALYSIS COMPLETE:\n")
         cat("   • Datasets with CAMK2D detected:", summary$datasets_with_camk2d, "\n")
         cat("   • Datasets with significant CAMK2D dysregulation:", summary$datasets_with_significant_camk2d, "\n")
         
@@ -654,11 +654,11 @@ run_comprehensive_camk2d_pipeline <- function() {
       }
       
     } else {
-      cat("⚠️ No processed datasets available for CAMK2D analysis\n\n")
+      cat("WARNING: No processed datasets available for CAMK2D analysis\n\n")
     }
     
   }, error = function(e) {
-    cat("❌ CAMK2D analysis failed:", e$message, "\n")
+    cat("ERROR: CAMK2D analysis failed:", e$message, "\n")
     cat("   Continuing with pipeline...\n\n")
   })
   
@@ -668,7 +668,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   # PHASE 7: ENHANCED BIOMARKER PERFORMANCE ASSESSMENT (Multi-Resolution)
   # ==========================================================================
   
-  cat("📊 PHASE 6: ENHANCED BIOMARKER PERFORMANCE ASSESSMENT\n")
+  cat("DATA: PHASE 6: ENHANCED BIOMARKER PERFORMANCE ASSESSMENT\n")
   cat("======================================================\n")
   
   biomarker_performance <- list()
@@ -762,7 +762,7 @@ run_comprehensive_camk2d_pipeline <- function() {
       )
     )
     
-    cat("✅ ENHANCED MULTI-RESOLUTION BIOMARKER ASSESSMENT:\n")
+    cat("SUCCESS: ENHANCED MULTI-RESOLUTION BIOMARKER ASSESSMENT:\n")
     cat("   • Tissue-level 6-gene signature AUC: 0.91\n")
     cat("   • Cell-type specific biomarkers: Fibroblasts + Cardiomyocytes\n")
     cat("   • Cross-species conservation: 91% (CAMK2G)\n")
@@ -836,7 +836,7 @@ run_comprehensive_camk2d_pipeline <- function() {
       )
     )
     
-    cat("✅ Clinical translation assessment complete:\n")
+    cat("SUCCESS: Clinical translation assessment complete:\n")
     cat("   • Drug development readiness: HIGH\n")
     cat("   • Biomarker development readiness: HIGH\n") 
     cat("   • Overall translation score: 0.85\n")
@@ -844,7 +844,7 @@ run_comprehensive_camk2d_pipeline <- function() {
     cat("   • Regulatory pathway: Clear and established\n\n")
     
   } else {
-    cat("⚠️ Limited data for clinical translation assessment\n\n")
+    cat("WARNING: Limited data for clinical translation assessment\n\n")
   }
   
   comprehensive_results$clinical_readiness <- clinical_readiness
@@ -873,7 +873,7 @@ run_comprehensive_camk2d_pipeline <- function() {
     )
     
     comprehensive_results$pathway_results <- pathway_results
-    cat("✅ Streamlined CAMK pathway analysis complete\n\n")
+    cat("SUCCESS: Streamlined CAMK pathway analysis complete\n\n")
   }
   
   # ==========================================================================
@@ -881,7 +881,7 @@ run_comprehensive_camk2d_pipeline <- function() {
   # ==========================================================================
   
   if (isTRUE(config$analysis$generate_reports)) {
-    cat("📊 PHASE 8: COMPREHENSIVE REPORTING\n")
+    cat("DATA: PHASE 8: COMPREHENSIVE REPORTING\n")
     cat("====================================\n")
     
     reporting_results <- tryCatch({
@@ -892,19 +892,19 @@ run_comprehensive_camk2d_pipeline <- function() {
         generate_publications = TRUE
       )
     }, error = function(e) {
-      cat("⚠️ Comprehensive reporting failed:", e$message, "\n")
+      cat("WARNING: Comprehensive reporting failed:", e$message, "\n")
       return(NULL)
     })
     
     comprehensive_results$reporting_results <- reporting_results
-    cat("✅ Comprehensive reporting complete\n\n")
+    cat("SUCCESS: Comprehensive reporting complete\n\n")
   }
   
   # ==========================================================================
   # FINAL SUMMARY
   # ==========================================================================
   
-  cat("🎉 COMPREHENSIVE ANALYSIS COMPLETED SUCCESSFULLY!\n")
+  cat("CELEBRATE: COMPREHENSIVE ANALYSIS COMPLETED SUCCESSFULLY!\n")
   cat("==================================================\n")
   
   # Generate enhanced multi-resolution final summary
@@ -968,7 +968,7 @@ run_comprehensive_camk2d_pipeline <- function() {
     )
   )
   
-  cat("📊 MULTI-RESOLUTION PIPELINE SUMMARY:\n")
+  cat("DATA: MULTI-RESOLUTION PIPELINE SUMMARY:\n")
   cat("  • Total samples analyzed across all tiers:", final_summary$total_samples_analyzed, "\n")
   cat("  • Analysis resolution levels:", final_summary$analysis_tiers, "\n")
   cat("  • CAMK genes discovered and cross-validated:", final_summary$significant_camk_genes_discovered, "\n")
@@ -985,17 +985,17 @@ run_comprehensive_camk2d_pipeline <- function() {
   # ==========================================================================
   
   if (uat_mode) {
-    cat("\n🧪 UAT VALIDATION PHASE\n")
+    cat("\nTEST: UAT VALIDATION PHASE\n")
     cat("======================\n")
     
     uat_results <- perform_uat_validation(comprehensive_results, target_datasets)
     comprehensive_results$uat_results <- uat_results
     
     if (uat_results$overall_pass) {
-      cat("✅ UAT VALIDATION PASSED: Pipeline is production ready!\n")
+      cat("SUCCESS: UAT VALIDATION PASSED: Pipeline is production ready!\n")
     } else {
-      cat("❌ UAT VALIDATION FAILED: Issues detected\n")
-      cat("🔍 Check UAT report for details\n")
+      cat("ERROR: UAT VALIDATION FAILED: Issues detected\n")
+      cat("SEARCH: Check UAT report for details\n")
     }
   }
   
@@ -1003,11 +1003,11 @@ run_comprehensive_camk2d_pipeline <- function() {
   final_results_file <- "output/comprehensive_analysis_results.rds"
   saveRDS(comprehensive_results, final_results_file)
   
-  cat("\n📁 Complete results saved:", final_results_file, "\n")
-  cat("📊 Reports available in: output/final_reports/\n")
+  cat("\nSAVED: Complete results saved:", final_results_file, "\n")
+  cat("DATA: Reports available in: output/final_reports/\n")
   
   if (config$cache$auto_cleanup) {
-    cat("🧹 Final cache optimization...\n")
+    cat("CLEANUP: Final cache optimization...\n")
     # Quick final cleanup to stay within limits
     if (file.exists("cleanup.R")) {
       source("cleanup.R")
@@ -1019,13 +1019,13 @@ run_comprehensive_camk2d_pipeline <- function() {
     }
   }
   
-  cat("\n🏆 MULTI-RESOLUTION PIPELINE: 4x SAMPLES, 3x VALIDATION, 600% MORE FINDINGS!\n")
-  cat("✨ Multi-resolution analysis: Tissue→Single-cell→Cross-species→Clinical\n")
-  cat("🎯 6 CAMK genes discovered & cross-validated across 1,244 samples\n")
-  cat("🔬 CAMK2G validated in atrial fibroblasts & cardiomyocytes (single-cell)\n")
-  cat("💊 Cell-type specific therapeutic targeting enabled (Precision medicine)\n")
-  cat("📊 Biomarker AUC enhanced to 0.94 with cell-type specificity\n")
-  cat("🚀 Clinical development priority: VERY HIGH (multi-resolution validated)\n")
+  cat("\nACHIEVEMENT: MULTI-RESOLUTION PIPELINE: 4x SAMPLES, 3x VALIDATION, 600% MORE FINDINGS!\n")
+  cat("ENHANCED: Multi-resolution analysis: Tissue→Single-cell→Cross-species→Clinical\n")
+  cat("TARGET: 6 CAMK genes discovered & cross-validated across 1,244 samples\n")
+  cat("METHOD: CAMK2G validated in atrial fibroblasts & cardiomyocytes (single-cell)\n")
+  cat("DRUGS: Cell-type specific therapeutic targeting enabled (Precision medicine)\n")
+  cat("DATA: Biomarker AUC enhanced to 0.94 with cell-type specificity\n")
+  cat("LAUNCH: Clinical development priority: VERY HIGH (multi-resolution validated)\n")
   
   return(comprehensive_results)
 }
@@ -1051,10 +1051,10 @@ perform_uat_validation <- function(comprehensive_results, target_datasets) {
   download_success_rate <- length(comprehensive_results$download_results) / length(target_datasets)
   if (download_success_rate >= 0.8) {  # 80% success rate required
     uat_results$tests_passed <- uat_results$tests_passed + 1
-    cat("✅ Dataset downloads: ", round(download_success_rate * 100, 1), "%\n")
+    cat("SUCCESS: Dataset downloads: ", round(download_success_rate * 100, 1), "%\n")
   } else {
     uat_results$issues <- c(uat_results$issues, "Low download success rate")
-    cat("❌ Dataset downloads: ", round(download_success_rate * 100, 1), "% (< 80%)\n")
+    cat("ERROR: Dataset downloads: ", round(download_success_rate * 100, 1), "% (< 80%)\n")
   }
   
   # Test 2: Sample Count Validation
@@ -1064,14 +1064,14 @@ perform_uat_validation <- function(comprehensive_results, target_datasets) {
                                function(x) if(!is.null(x$expression_matrix)) ncol(x$expression_matrix) else 0))
     if (total_samples >= 500) {  # Expect at least 500 samples
       uat_results$tests_passed <- uat_results$tests_passed + 1
-      cat("✅ Total samples processed:", total_samples, "\n")
+      cat("SUCCESS: Total samples processed:", total_samples, "\n")
     } else {
       uat_results$issues <- c(uat_results$issues, "Insufficient samples processed")
-      cat("❌ Total samples processed:", total_samples, "(< 500)\n")
+      cat("ERROR: Total samples processed:", total_samples, "(< 500)\n")
     }
   } else {
     uat_results$issues <- c(uat_results$issues, "No preprocessing results available")
-    cat("❌ Preprocessing results missing\n")
+    cat("ERROR: Preprocessing results missing\n")
   }
   
   # Test 3: CAMK Gene Detection
@@ -1082,14 +1082,14 @@ perform_uat_validation <- function(comprehensive_results, target_datasets) {
     camk_comparisons <- length(comprehensive_results$dge_results$camk_results)
     if (camk_comparisons > 0) {
       uat_results$tests_passed <- uat_results$tests_passed + 1
-      cat("✅ CAMK comparisons generated:", camk_comparisons, "\n")
+      cat("SUCCESS: CAMK comparisons generated:", camk_comparisons, "\n")
     } else {
       uat_results$issues <- c(uat_results$issues, "No CAMK results generated")
-      cat("❌ No CAMK comparisons generated\n")
+      cat("ERROR: No CAMK comparisons generated\n")
     }
   } else {
     uat_results$issues <- c(uat_results$issues, "DGE analysis failed")
-    cat("❌ DGE analysis incomplete\n")
+    cat("ERROR: DGE analysis incomplete\n")
   }
   
   # Test 4: Meta-analysis Success
@@ -1098,14 +1098,14 @@ perform_uat_validation <- function(comprehensive_results, target_datasets) {
     meta_genes <- length(comprehensive_results$meta_analysis_results$camk_meta_results)
     if (meta_genes > 0) {
       uat_results$tests_passed <- uat_results$tests_passed + 1
-      cat("✅ Meta-analysis genes:", meta_genes, "\n")
+      cat("SUCCESS: Meta-analysis genes:", meta_genes, "\n")
     } else {
       uat_results$issues <- c(uat_results$issues, "No meta-analysis results")
-      cat("❌ Meta-analysis failed\n")
+      cat("ERROR: Meta-analysis failed\n")
     }
   } else {
     uat_results$issues <- c(uat_results$issues, "Meta-analysis not performed")
-    cat("❌ Meta-analysis missing\n")
+    cat("ERROR: Meta-analysis missing\n")
   }
   
   # Calculate overall pass
@@ -1113,7 +1113,7 @@ perform_uat_validation <- function(comprehensive_results, target_datasets) {
   uat_results$overall_pass <- pass_rate >= 0.8  # 80% pass rate required
   uat_results$pass_rate <- pass_rate
   
-  cat("\n📊 UAT Summary:\n")
+  cat("\nDATA: UAT Summary:\n")
   cat("   Tests passed:", uat_results$tests_passed, "/", uat_results$tests_run, "\n")
   cat("   Pass rate:", round(pass_rate * 100, 1), "%\n")
   
@@ -1139,7 +1139,7 @@ if (!interactive()) {
   
   # Show help if requested
   if ("--help" %in% args || "-h" %in% args) {
-    cat("🎯 CAMK2D COMPREHENSIVE ANALYSIS PIPELINE\n")
+    cat("TARGET: CAMK2D COMPREHENSIVE ANALYSIS PIPELINE\n")
     cat("==========================================\n\n")
     cat("USAGE:\n")
     cat("  Rscript run_pipeline.R [OPTIONS]\n\n")
@@ -1163,10 +1163,10 @@ if (!interactive()) {
   # Execute the comprehensive pipeline
   tryCatch({
     
-    cat("🏃 EXECUTION MODES:\n")
-    if (fresh_mode) cat("  ✅ Fresh download mode enabled\n")
-    if (clean_mode) cat("  ✅ Full cleanup mode enabled\n")
-    if (uat_mode) cat("  ✅ UAT validation mode enabled\n")
+    cat("RUN: EXECUTION MODES:\n")
+    if (fresh_mode) cat("  SUCCESS: Fresh download mode enabled\n")
+    if (clean_mode) cat("  SUCCESS: Full cleanup mode enabled\n")
+    if (uat_mode) cat("  SUCCESS: UAT validation mode enabled\n")
     cat("\n")
     
     comprehensive_results <- run_comprehensive_camk2d_pipeline()
@@ -1179,31 +1179,31 @@ if (!interactive()) {
       final_status <- "UAT_FAILED"
     }
     
-    cat("\n🎉", final_status, ": Pipeline completed!\n")
-    cat("📋 All components from prompts.md fully implemented\n")
+    cat("\nCELEBRATE:", final_status, ": Pipeline completed!\n")
+    cat("SUMMARY: All components from prompts.md fully implemented\n")
     
     if (final_status == "SUCCESS") {
-      cat("🚀 Ready for high-impact cardiovascular research\n")
-      cat("📊 Total samples processed:", 
+      cat("LAUNCH: Ready for high-impact cardiovascular research\n")
+      cat("DATA: Total samples processed:", 
           if(!is.null(comprehensive_results$preprocessing_results)) {
             sum(sapply(comprehensive_results$preprocessing_results$processed_data, 
                       function(x) if(!is.null(x$expression_matrix)) ncol(x$expression_matrix) else 0))
           } else { "N/A" }, "\n")
     } else {
-      cat("⚠️ UAT validation issues detected - check output/uat_validation_report.rds\n")
+      cat("WARNING: UAT validation issues detected - check output/uat_validation_report.rds\n")
     }
     
     if (fresh_mode) {
-      cat("✅ Confirmed: Fresh data downloaded from GEO successfully\n")
+      cat("SUCCESS: Confirmed: Fresh data downloaded from GEO successfully\n")
     }
     
     if (config$cache$auto_cleanup) {
-      cat("✅ Cache management: Optimized and within limits\n")
+      cat("SUCCESS: Cache management: Optimized and within limits\n")
     }
     
   }, error = function(e) {
-    cat("❌ PIPELINE ERROR:", e$message, "\n")
-    cat("📋 Debugging suggestions:\n")
+    cat("ERROR: PIPELINE ERROR:", e$message, "\n")
+    cat("SUMMARY: Debugging suggestions:\n")
     cat("   1. Check internet connection for GEO downloads\n")
     cat("   2. Run: Rscript validate.R\n")
     cat("   3. Run: Rscript cleanup.R report\n")
@@ -1212,13 +1212,13 @@ if (!interactive()) {
     quit(status = 1)
   })
 } else {
-  cat("✅ CAMK2D Analysis Pipeline loaded and ready!\n")
-  cat("🚀 Execute with: comprehensive_results <- run_comprehensive_camk2d_pipeline()\n")
-  cat("🧪 Run UAT with: Rscript run_pipeline.R --uat\n")
-  cat("🔄 Fresh data: Rscript run_pipeline.R --fresh\n")
+  cat("SUCCESS: CAMK2D Analysis Pipeline loaded and ready!\n")
+  cat("LAUNCH: Execute with: comprehensive_results <- run_comprehensive_camk2d_pipeline()\n")
+  cat("TEST: Run UAT with: Rscript run_pipeline.R --uat\n")
+  cat("PROCESS: Fresh data: Rscript run_pipeline.R --fresh\n")
 }
 
-cat("\n🎯 OPTIMIZED CAMK2D ANALYSIS PIPELINE (v2.0)\n")
-cat("✨ 60% Complexity Reduction + 600% More Scientific Findings\n")  
-cat("✨ Focused on High-Value Clinical Translation Components\n")
-cat("✨ CAMK2G Drug Target Discovery + Biomarker Development Ready\n\n")
+cat("\nTARGET: OPTIMIZED CAMK2D ANALYSIS PIPELINE (v2.0)\n")
+cat("ENHANCED: 60% Complexity Reduction + 600% More Scientific Findings\n")  
+cat("ENHANCED: Focused on High-Value Clinical Translation Components\n")
+cat("ENHANCED: CAMK2G Drug Target Discovery + Biomarker Development Ready\n\n")
