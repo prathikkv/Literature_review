@@ -29,7 +29,7 @@ suppressPackageStartupMessages({
 #' @return Vector of CAMK gene symbols
 get_camk_family_genes <- function() {
   c("CAMK2D", "CAMK2A", "CAMK2B", "CAMK2G", 
-    "CAMKK1", "CAMKK2", "CAMK1", "CAMK1D", "CAMK1G", "CAMK4")
+    "CAMKK1", "CAMKK2", "CAMK1", "CAMK1D", "CAMK1G", "CAMK4", "CAMKV")
 }
 
 #' Comprehensive Differential Expression Analysis
@@ -123,6 +123,11 @@ auto_detect_groups <- function(dataset) {
   
   pheno_data <- dataset$phenotype_data
   
+  # Safety check for empty phenotype data
+  if (is.null(pheno_data) || nrow(pheno_data) == 0) {
+    return(NULL)
+  }
+  
   # Look for common disease/control indicators
   group_columns <- c("disease", "condition", "group", "tissue", "treatment", 
                     "disease.state", "disease_state", "phenotype", "title")
@@ -130,6 +135,11 @@ auto_detect_groups <- function(dataset) {
   for (col in group_columns) {
     if (col %in% colnames(pheno_data)) {
       groups <- as.factor(pheno_data[[col]])
+      
+      # Safety check for empty groups
+      if (length(groups) == 0) {
+        next
+      }
       
       # Check if we have at least 2 groups with reasonable sample sizes
       group_counts <- table(groups)
@@ -147,19 +157,30 @@ auto_detect_groups <- function(dataset) {
     sample_info <- sample_names
   }
   
+  # Safety check for sample info
+  if (is.null(sample_info) || length(sample_info) == 0) {
+    return(NULL)
+  }
+  
   # Look for AF/SR, disease/control patterns
   if (any(grepl("AF|fibrillation", sample_info, ignore.case = TRUE)) && 
       any(grepl("SR|sinus|control", sample_info, ignore.case = TRUE))) {
     
     groups <- ifelse(grepl("AF|fibrillation", sample_info, ignore.case = TRUE), "AF", "SR")
-    return(list(groups = as.factor(groups), column = "auto_detected"))
+    # Check we have both groups
+    if (length(unique(groups)) >= 2) {
+      return(list(groups = as.factor(groups), column = "auto_detected"))
+    }
   }
   
   if (any(grepl("HF|heart.failure|failure", sample_info, ignore.case = TRUE)) && 
       any(grepl("control|normal|healthy", sample_info, ignore.case = TRUE))) {
     
     groups <- ifelse(grepl("HF|heart.failure|failure", sample_info, ignore.case = TRUE), "HF", "Control")
-    return(list(groups = as.factor(groups), column = "auto_detected"))
+    # Check we have both groups
+    if (length(unique(groups)) >= 2) {
+      return(list(groups = as.factor(groups), column = "auto_detected"))
+    }
   }
   
   return(NULL)
