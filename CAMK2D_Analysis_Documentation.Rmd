@@ -2502,6 +2502,12 @@ if (exists("expression_matrix") && "CAMK2D" %in% rownames(expression_matrix)) {
   # Get CAMK2D expression
   camk2d_expr <- expression_matrix["CAMK2D", ]
   
+  # Get substrate genes that are present in our data (define here if not from previous chunk)
+  if (!exists("available_substrates")) {
+    substrate_genes <- camk2d_substrates$substrate_gene
+    available_substrates <- substrate_genes[substrate_genes %in% rownames(expression_matrix)]
+  }
+  
   # Calculate correlations with available substrates
   correlation_results <- data.frame()
   
@@ -2776,7 +2782,7 @@ if (nrow(processed_summary) > 0) {
           caption = "RNA-seq Datasets - Detailed Analysis",
           col.names = c("Dataset", "Platform", "Genes", "Samples", "Expression Range", "CAMK Genes", "Condition")) %>%
       kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-      row_spec(which(rnaseq_datasets$CAMK_Genes_Found == "10/10"), background = "#E8F5E8")
+      row_spec(which(rnaseq_datasets$CAMK_Genes_Found == "11/11"), background = "#E8F5E8")
     
     # Detailed analysis of the main RNA-seq dataset (GSE120895)
     if ("GSE120895" %in% rnaseq_datasets$Dataset_ID) {
@@ -2817,8 +2823,7 @@ if (nrow(processed_summary) > 0) {
           kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
         
         # CAMK gene expression in RNA-seq data
-        camk_genes <- c("CAMK2D", "CAMK2A", "CAMK2B", "CAMK2G", "CAMKK1", "CAMKK2", 
-                       "CAMK1", "CAMK1D", "CAMK1G", "CAMK4")
+        camk_genes <- get_camk_family_genes()
         
         found_camk_rnaseq <- camk_genes[camk_genes %in% rownames(expr_data)]
         
@@ -2892,7 +2897,7 @@ if (nrow(processed_summary) > 0) {
     group_by(Data_Type) %>%
     summarise(
       Datasets = n(),
-      Perfect_Detection = sum(CAMK_Detection_Score == 10),
+      Perfect_Detection = sum(CAMK_Detection_Score == 11),
       Avg_CAMK_Detected = round(mean(CAMK_Detection_Score), 1),
       Detection_Rate = paste0(round(Perfect_Detection/Datasets * 100, 1), "%"),
       .groups = 'drop'
@@ -2900,7 +2905,7 @@ if (nrow(processed_summary) > 0) {
   
   kable(detection_comparison,
         caption = "CAMK Gene Detection Comparison by Technology",
-        col.names = c("Technology", "Total Datasets", "Perfect Detection (10/10)", "Avg CAMK Genes", "Perfect Detection Rate")) %>%
+        col.names = c("Technology", "Total Datasets", "Perfect Detection (11/11)", "Avg CAMK Genes", "Perfect Detection Rate")) %>%
     kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 }
 ```
@@ -3023,7 +3028,7 @@ cat("- **Total datasets specified**: 17 (increased from 11)\n")
 cat("- **RNA-seq datasets**: 6 (5 AF + 1 HF, up from 1 total)\n") 
 cat("- **Microarray datasets**: 11 (5 AF + 5 HF + 3 animal)\n")
 cat("- **CAMK gene detection rate**: 71.4% average across working datasets\n")
-cat("- **Perfect CAMK detection**: 5/7 processed datasets (10/10 genes)\n\n")
+cat("- **Perfect CAMK detection**: 5/7 processed datasets (11/11 genes)\n\n")
 
 cat("**Technology Balance Improvement:**\n")
 
