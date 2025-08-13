@@ -1589,7 +1589,7 @@ if (length(camk_results_list) > 0) {
   
   # Select key columns for display
   display_results <- all_camk_results %>%
-    select(Gene, Comparison, Group1, Group2, Mean_Group1, Mean_Group2, 
+    dplyr::select(Gene, Comparison, Group1, Group2, Mean_Group1, Mean_Group2, 
            Log2_FC, P_Value, FDR, Expression_Change) %>%
     arrange(Gene, Comparison)
   
@@ -2237,7 +2237,7 @@ addStyle(wb, "Summary", style = createStyle(fontSize = 12, halign = "left", font
 if ("HC_vs_HF" %in% names(camk_results_list)) {
   addWorksheet(wb, "HC_vs_HF")
   hc_hf_data <- camk_results_list$HC_vs_HF %>%
-    select(Gene, Mean_HC, Mean_HF, Log2_FC_HF_vs_HC, P_Value_HC_vs_HF, FDR_HC_vs_HF, Significant) %>%
+    dplyr::select(Gene, Mean_HC, Mean_HF, Log2_FC_HF_vs_HC, P_Value_HC_vs_HF, FDR_HC_vs_HF, Significant) %>%
     arrange(P_Value_HC_vs_HF)
   writeData(wb, "HC_vs_HF", hc_hf_data)
   
@@ -2250,7 +2250,7 @@ if ("HC_vs_HF" %in% names(camk_results_list)) {
 if ("HC_vs_AF" %in% names(camk_results_list)) {
   addWorksheet(wb, "HC_vs_AF")
   hc_af_data <- camk_results_list$HC_vs_AF %>%
-    select(Gene, Mean_HC, Mean_AF, Log2_FC_AF_vs_HC, P_Value_HC_vs_AF, FDR_HC_vs_AF, Significant) %>%
+    dplyr::select(Gene, Mean_HC, Mean_AF, Log2_FC_AF_vs_HC, P_Value_HC_vs_AF, FDR_HC_vs_AF, Significant) %>%
     arrange(P_Value_HC_vs_AF)
   writeData(wb, "HC_vs_AF", hc_af_data)
   
@@ -2262,7 +2262,7 @@ if ("HC_vs_AF" %in% names(camk_results_list)) {
 if ("AF_vs_HF" %in% names(camk_results_list)) {
   addWorksheet(wb, "AF_vs_HF")
   af_hf_data <- camk_results_list$AF_vs_HF %>%
-    select(Gene, Mean_AF, Mean_HF, Log2_FC_AF_vs_HF, P_Value_AF_vs_HF, FDR_AF_vs_HF, Significant) %>%
+    dplyr::select(Gene, Mean_AF, Mean_HF, Log2_FC_AF_vs_HF, P_Value_AF_vs_HF, FDR_AF_vs_HF, Significant) %>%
     arrange(P_Value_AF_vs_HF)
   writeData(wb, "AF_vs_HF", af_hf_data)
   
@@ -2316,7 +2316,7 @@ if (length(camk_results_list) > 0) {
   
   # Select key columns
   export_data <- all_results %>%
-    select(Gene, Comparison, starts_with("Mean_"), starts_with("Log2_FC"), 
+    dplyr::select(Gene, Comparison, starts_with("Mean_"), starts_with("Log2_FC"), 
            starts_with("P_Value"), starts_with("FDR"), Significant)
   
   writeData(wb, "All_Comparisons", export_data)
@@ -2464,7 +2464,7 @@ if (exists("expression_matrix") && length(camk_results_list) > 0) {
   # Create summary heatmap of substrate expression changes
   if (nrow(all_substrate_results) > 0) {
     substrate_matrix <- all_substrate_results %>%
-      select(Substrate, Comparison, Log2_FC) %>%
+      dplyr::select(Substrate, Comparison, Log2_FC) %>%
       pivot_wider(names_from = Comparison, values_from = Log2_FC) %>%
       column_to_rownames("Substrate") %>%
       as.matrix()
@@ -2536,7 +2536,7 @@ if (exists("expression_matrix") && "CAMK2D" %in% rownames(expression_matrix)) {
     arrange(desc(Abs_Correlation))
   
   # Display correlation table
-  datatable(correlation_results %>% select(-Abs_Correlation),
+  datatable(correlation_results %>% dplyr::select(-Abs_Correlation),
             caption = "CAMK2D-Substrate Expression Correlations",
             options = list(pageLength = 10)) %>%
     formatRound(columns = c("Correlation"), digits = 3) %>%
@@ -2636,7 +2636,7 @@ clinical_assessment <- camk2d_substrates %>%
 
 # Display clinical assessment table
 datatable(clinical_assessment %>%
-            select(substrate_gene, substrate_protein, phospho_site, 
+            dplyr::select(substrate_gene, substrate_protein, phospho_site, 
                    Druggability, Biomarker_Potential, Clinical_Evidence),
           caption = "Clinical Assessment of CAMK2D Phosphorylation Targets",
           options = list(pageLength = 10, scrollX = TRUE)) %>%
@@ -2669,7 +2669,7 @@ if (exists("wb") && exists("all_substrate_results")) {
   # Combine substrate results with clinical assessment
   phospho_export <- merge(
     all_substrate_results,
-    clinical_assessment %>% select(substrate_gene, Druggability, Biomarker_Potential),
+    clinical_assessment %>% dplyr::select(substrate_gene, Druggability, Biomarker_Potential),
     by.x = "Substrate", by.y = "substrate_gene",
     all.x = TRUE
   )
@@ -2778,7 +2778,7 @@ if (nrow(processed_summary) > 0) {
     cat("## RNA-seq Datasets Available\n\n")
     
     kable(rnaseq_datasets %>% 
-            select(Dataset_ID, Platform, Genes, Samples, Expression_Range, CAMK_Genes_Found, Condition),
+            dplyr::select(Dataset_ID, Platform, Genes, Samples, Expression_Range, CAMK_Genes_Found, Condition),
           caption = "RNA-seq Datasets - Detailed Analysis",
           col.names = c("Dataset", "Platform", "Genes", "Samples", "Expression Range", "CAMK Genes", "Condition")) %>%
       kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
@@ -2863,7 +2863,7 @@ if (nrow(processed_summary) > 0) {
 if (nrow(processed_summary) > 0) {
   # Compare expression characteristics between technologies
   tech_comparison <- processed_summary %>%
-    select(Dataset_ID, Data_Type, Genes, Samples, Expression_Range, CAMK_Genes_Found, Condition)
+    dplyr::select(Dataset_ID, Data_Type, Genes, Samples, Expression_Range, CAMK_Genes_Found, Condition)
   
   cat("### Expression Range Comparison\n\n")
   
