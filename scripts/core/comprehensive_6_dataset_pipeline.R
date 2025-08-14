@@ -9,7 +9,7 @@ library(metafor)
 library(tidyverse)
 
 # Load functions
-source("scripts/enhanced_group_detection_corrected.R")
+source("scripts/core/enhanced_group_detection_corrected.R")
 source("functions/camk_definitions.R")
 source("functions/analysis.R")
 

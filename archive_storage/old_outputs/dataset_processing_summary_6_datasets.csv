@@ -1,0 +1,7 @@
+"Dataset","Priority","Samples","Total_Genes","CAMK_Genes","Significant_CAMK","Platform","Disease_Type","Biological_Context","Status"
+"GSE57338","HIGH",313,20254,11,6,"GPL570","Heart failure (DCM + Ischemic)","Ventricular heart failure","SUCCESS"
+"GSE41177","MODERATE",38,31383,11,11,"GPL570","Atrial fibrillation","Atrial arrhythmia","SUCCESS"
+"GSE79768","MODERATE",26,31383,11,2,"GPL570","Atrial fibrillation","Atrial arrhythmia","SUCCESS"
+"GSE115574","MODERATE",59,31383,11,0,"GPL570","Atrial fibrillation","Atrial arrhythmia","SUCCESS"
+"GSE31821","LOW",6,NA,NA,NA,NA,"Atrial fibrillation","Atrial arrhythmia","FAILED: file_not_found"
+"GSE14975","LOW",10,NA,NA,NA,NA,"Heart failure","Heart failure","FAILED: file_not_found"

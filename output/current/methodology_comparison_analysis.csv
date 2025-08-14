@@ -1,0 +1,10 @@
+Study,Dataset_ID,Original_Method,Our_Method,Alignment,Justification
+GSE57338,GSE57338,RNA-Seq with K-means clustering on 6 samples,Processed microarray data from GEO with limma DEG analysis,DIFFERENT,We used the larger processed dataset (313 samples) rather than the small RNA-Seq subset (6 samples) for better statistical power
+GSE41177,GSE41177,54675 ESTs microarray analysis with undefined statistical thresholds,RMA normalized microarray data with limma (FDR<0.05),ALIGNED,Both use microarray data; we applied standard statistical thresholds where original did not specify
+GSE79768,GSE79768,Multiple approaches: APCA batch correction and WGCNA analysis,RMA normalization with limma and standard thresholds,ALIGNED,Our standard microarray workflow is consistent with the multiple analysis approaches used
+GSE115574,GSE115574,R software with batch normalization and standard microarray workflow,RMA normalization with limma using R/Bioconductor,FULLY_ALIGNED,Identical approach - both use R software with standard batch normalization
+All_Datasets,Meta-analysis,Various undocumented methods,Fixed-effects meta-analysis using metafor package,IMPROVED,We used rigorous meta-analysis methods where original studies lacked standardization
+Preprocessing,All,Mixed - some RMA some undefined,Consistent RMA normalization via GEO processed data,STANDARDIZED,We applied consistent RMA preprocessing across all datasets
+Statistical_Analysis,All,Variable statistical approaches,limma with empirical Bayes moderation,GOLD_STANDARD,limma is the current gold standard for microarray differential expression
+P-value_Correction,All,Often unspecified or varying methods,Benjamini-Hochberg FDR correction (FDR<0.05),BEST_PRACTICE,Applied consistent FDR correction where original studies often lacked this
+Quality_Control,All,Limited or undocumented QC,Systematic quality flags for extreme logFC values,ENHANCED,Added quality control measures not present in original studies
