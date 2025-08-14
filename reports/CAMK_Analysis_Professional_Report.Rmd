@@ -73,13 +73,13 @@ for (pkg in required_packages) {
 load_analysis_results <- function() {
   tryCatch({
     # Load meta-analysis results
-    meta_results <- read.csv("output/CAMK_meta_analysis_FINAL.csv", stringsAsFactors = FALSE)
+    meta_results <- read.csv("../output/current/CAMK_meta_analysis_FINAL.csv", stringsAsFactors = FALSE)
     
     # Load individual dataset results  
-    individual_results <- read.csv("output/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv", stringsAsFactors = FALSE)
+    individual_results <- read.csv("../output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv", stringsAsFactors = FALSE)
     
     # Load dataset summary
-    dataset_summary <- read.csv("output/dataset_processing_summary_6_datasets.csv", stringsAsFactors = FALSE)
+    dataset_summary <- read.csv("../output/current/dataset_processing_summary_6_datasets.csv", stringsAsFactors = FALSE)
     
     # Calculate summary metrics
     total_datasets <- nrow(dataset_summary[dataset_summary$Status == "SUCCESS", ])
