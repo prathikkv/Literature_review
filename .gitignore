@@ -16,6 +16,9 @@
 *.knit.md
 *.utf8.md
 
+# Exception: Keep final results HTML
+!FINAL_RESULTS.html
+
 # Temporary documentation files
 *_Fixed.Rmd
 *_temp.html
