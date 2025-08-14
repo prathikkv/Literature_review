@@ -18,9 +18,9 @@ suppressPackageStartupMessages({
 #' @param output_dir Pipeline output directory
 #' @param fresh_only Only load results from latest pipeline run
 #' @return List with all available pipeline results
-load_pipeline_results <- function(output_dir = "output", fresh_only = TRUE) {
+load_pipeline_results <- function(output_dir = "output", fresh_only = TRUE, cache_dir = "cache") {
   
-  # Loading pipeline results dynamically
+  # Loading pipeline results dynamically with dataset discovery
   
   # Initialize results list
   pipeline_results <- list(
@@ -31,7 +31,8 @@ load_pipeline_results <- function(output_dir = "output", fresh_only = TRUE) {
     datasets_processed = NULL,
     visualizations = NULL,
     analysis_summary = NULL,
-    sample_counts = NULL
+    sample_counts = NULL,
+    available_datasets = NULL
   )
   
   # Check if output directory exists
@@ -40,8 +41,32 @@ load_pipeline_results <- function(output_dir = "output", fresh_only = TRUE) {
     return(pipeline_results)
   }
   
-  # Load meta-analysis results
-  meta_file <- file.path(output_dir, "CAMK_meta_analysis_summary.csv")
+  # Discover available datasets from cache directory
+  if (dir.exists(cache_dir)) {
+    dataset_files <- list.files(cache_dir, pattern = "GSE.*_processed\\.rds", recursive = TRUE, full.names = TRUE)
+    if (length(dataset_files) > 0) {
+      dataset_ids <- unique(gsub(".*/(GSE[0-9]+)_processed\\.rds", "\\1", dataset_files))
+      dataset_paths <- sapply(dataset_ids, function(id) {
+        matches <- dataset_files[grepl(paste0(id, "_processed\\.rds"), dataset_files)]
+        if (length(matches) > 0) matches[1] else NA
+      })
+      dataset_paths <- dataset_paths[!is.na(dataset_paths)]
+      
+      pipeline_results$available_datasets <- list(
+        dataset_ids = dataset_ids,
+        dataset_files = dataset_paths,
+        total_available = length(dataset_ids)
+      )
+    }
+  }
+  
+  # Load meta-analysis results (prefer FINAL version)
+  meta_file_final <- file.path(output_dir, "CAMK_meta_analysis_summary_FINAL.csv")
+  meta_file_updated <- file.path(output_dir, "CAMK_meta_analysis_summary_UPDATED.csv")
+  meta_file_original <- file.path(output_dir, "CAMK_meta_analysis_summary.csv")
+  
+  meta_file <- if (file.exists(meta_file_final)) meta_file_final else if (file.exists(meta_file_updated)) meta_file_updated else meta_file_original
+  
   if (file.exists(meta_file)) {
     tryCatch({
       pipeline_results$meta_analysis <- read_csv(meta_file, show_col_types = FALSE)
@@ -52,8 +77,13 @@ load_pipeline_results <- function(output_dir = "output", fresh_only = TRUE) {
     })
   }
   
-  # Load DGE results
-  dge_file <- file.path(output_dir, "CAMK_focused_DGE_all_datasets.csv")
+  # Load DGE results (prefer FINAL version)
+  dge_file_final <- file.path(output_dir, "CAMK_focused_DGE_all_datasets_FINAL.csv")
+  dge_file_updated <- file.path(output_dir, "CAMK_focused_DGE_all_datasets_UPDATED.csv")
+  dge_file_original <- file.path(output_dir, "CAMK_focused_DGE_all_datasets.csv")
+  
+  dge_file <- if (file.exists(dge_file_final)) dge_file_final else if (file.exists(dge_file_updated)) dge_file_updated else dge_file_original
+  
   if (file.exists(dge_file)) {
     tryCatch({
       pipeline_results$dge_results <- read_csv(dge_file, show_col_types = FALSE)
@@ -76,23 +106,40 @@ load_pipeline_results <- function(output_dir = "output", fresh_only = TRUE) {
     
     pipeline_results$datasets_processed <- datasets_info
     
-    # Estimate sample counts from known dataset sizes
-    dataset_samples <- c(
-      "GSE57338" = 313,
-      "GSE14975" = 10, 
-      "GSE31821" = 6,
-      "GSE41177" = 38,
-      "GSE79768" = 26
-    )
-    
-    actual_datasets <- unique(pipeline_results$dge_results$Dataset)
-    total_samples <- sum(dataset_samples[names(dataset_samples) %in% actual_datasets], na.rm = TRUE)
-    
-    pipeline_results$sample_counts <- list(
-      total_samples = total_samples,
-      total_datasets = length(actual_datasets),
-      dataset_breakdown = dataset_samples[names(dataset_samples) %in% actual_datasets]
-    )
+    # Get sample counts from dataset inventory if available
+    inventory_file <- file.path(output_dir, "comprehensive_dataset_inventory.csv")
+    if (file.exists(inventory_file)) {
+      tryCatch({
+        inventory <- read_csv(inventory_file, show_col_types = FALSE)
+        if ("Dataset_ID" %in% names(inventory) && "Total_Samples" %in% names(inventory)) {
+          actual_datasets <- unique(pipeline_results$dge_results$Dataset)
+          inventory_subset <- inventory[inventory$Dataset_ID %in% actual_datasets, ]
+          total_samples <- sum(as.numeric(inventory_subset$Total_Samples), na.rm = TRUE)
+          
+          dataset_breakdown <- setNames(as.numeric(inventory_subset$Total_Samples), 
+                                      inventory_subset$Dataset_ID)
+          
+          pipeline_results$sample_counts <- list(
+            total_samples = total_samples,
+            total_datasets = length(actual_datasets),
+            dataset_breakdown = dataset_breakdown,
+            inventory_data = inventory_subset
+          )
+        }
+      }, error = function(e) {
+        # Fallback to hardcoded values if inventory fails
+        dataset_samples <- c("GSE57338" = 313, "GSE14975" = 10, "GSE31821" = 6, 
+                           "GSE41177" = 38, "GSE79768" = 26, "GSE115574" = 59)
+        actual_datasets <- unique(pipeline_results$dge_results$Dataset)
+        total_samples <- sum(dataset_samples[names(dataset_samples) %in% actual_datasets], na.rm = TRUE)
+        
+        pipeline_results$sample_counts <- list(
+          total_samples = total_samples,
+          total_datasets = length(actual_datasets),
+          dataset_breakdown = dataset_samples[names(dataset_samples) %in% actual_datasets]
+        )
+      })
+    }
   }
   
   # Find visualization files
@@ -411,6 +458,44 @@ validate_data_quality <- function(pipeline_results) {
   }
   
   return(validation)
+}
+
+#' Sync Pipeline Results for R Markdown
+#'
+#' Main function to synchronize pipeline results for R Markdown integration
+#' @param force_reload Force reload of all results
+#' @param output_dir Pipeline output directory
+#' @param cache_dir Pipeline cache directory
+#' @return List with pipeline_results, dynamic_metrics, and module_status
+sync_pipeline_results <- function(force_reload = FALSE, output_dir = "output", cache_dir = "cache") {
+  
+  # Load pipeline results
+  pipeline_results <- load_pipeline_results(output_dir = output_dir, cache_dir = cache_dir)
+  
+  # Get dynamic metrics
+  dynamic_metrics <- get_dynamic_metrics(pipeline_results)
+  
+  # Determine module status
+  pathway_results_exist <- file.exists("output/pathway_enrichment_results.rds")
+  
+  module_status <- list(
+    dge_analysis = !is.null(pipeline_results$dge_results),
+    meta_analysis = !is.null(pipeline_results$meta_analysis),
+    pathway_analysis = pathway_results_exist,
+    survival_analysis = FALSE,  # Not implemented yet
+    ml_analysis = FALSE  # Not implemented yet
+  )
+  
+  # Override with available datasets count if found
+  if (!is.null(pipeline_results$available_datasets)) {
+    dynamic_metrics$total_datasets <- pipeline_results$available_datasets$total_available
+  }
+  
+  return(list(
+    pipeline_results = pipeline_results,
+    dynamic_metrics = dynamic_metrics,
+    module_status = module_status
+  ))
 }
 
 # Pipeline Results Dynamic Loading Module loaded successfully

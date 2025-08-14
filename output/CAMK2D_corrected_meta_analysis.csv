@@ -1,0 +1,2 @@
+"Gene","N_Studies","Combined_logFC","Combined_SE","Combined_P_Value","CI_Lower","CI_Upper","Heterogeneity_I2","Regulation","Significant","Datasets","Individual_logFC","Individual_P_Values"
+"CAMK2D",3,0.00847733781295417,0.0244296156086068,0.728583286397042,-0.0394038289360727,0.056358504561981,84.7,"UP in Disease",FALSE,"GSE41177, GSE79768, GSE57338","-0.7777, -0.1526, 0.0405","2.65e-02, 2.50e-02, 1.28e-01"
