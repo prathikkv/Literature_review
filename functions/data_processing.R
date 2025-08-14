@@ -850,12 +850,30 @@ comprehensive_preprocessing_pipeline <- function(dataset_list,
       # Determine platform type and apply appropriate preprocessing
       platform_type <- determine_platform_type(dataset)
       
+      # Skip datasets with unknown platform type or empty expression matrices
+      if (platform_type == "unknown") {
+        cat("⏭️ SKIP: Dataset", dataset_id, "has unknown platform type or empty expression matrix\n")
+        next
+      }
+      
+      # Additional validation
+      if (is.null(dataset$expression_matrix) || length(dataset$expression_matrix) == 0) {
+        cat("⏭️ SKIP: Dataset", dataset_id, "has empty expression matrix\n")
+        next
+      }
+      
       if (platform_type == "microarray") {
         processed_data <- preprocess_microarray_data(dataset)
       } else if (platform_type == "rna_seq") {
         processed_data <- preprocess_rnaseq_data(dataset)
       } else {
-        cat("WARNING: Unknown platform type for", dataset_id, "\n")
+        cat("⏭️ SKIP: Unknown platform type for", dataset_id, "\n")
+        next
+      }
+      
+      # Check if preprocessing returned valid data
+      if (is.null(processed_data)) {
+        cat("⏭️ SKIP: Preprocessing failed for", dataset_id, "\n")
         next
       }
       
@@ -876,13 +894,32 @@ comprehensive_preprocessing_pipeline <- function(dataset_list,
       
     }, error = function(e) {
       cat("ERROR: Error processing", dataset_id, ":", e$message, "\n")
+      
+      # Provide specific error guidance
+      if (grepl("x.*y.*lengths differ", e$message)) {
+        cat("  ↳ HINT: This suggests dimension mismatch - dataset may have incompatible sample/feature dimensions\n")
+      } else if (grepl("max.*no non-missing", e$message)) {
+        cat("  ↳ HINT: Expression matrix appears to be empty or all NA values\n")
+      } else if (grepl("memory", e$message, ignore.case = TRUE)) {
+        cat("  ↳ HINT: Memory issue - try reducing dataset size or clearing workspace\n")
+      }
+      cat("  ↳ ACTION: Skipping", dataset_id, "and continuing with other datasets\n")
     })
   }
   
   # Apply batch correction if requested
   if (apply_batch_correction && length(processed_datasets) > 1) {
     cat("\nPROCESS: Applying batch effect correction...\n")
-    processed_datasets <- apply_batch_correction_pipeline(processed_datasets)
+    tryCatch({
+      processed_datasets <- apply_batch_correction_pipeline(processed_datasets)
+    }, error = function(e) {
+      cat("ERROR: PIPELINE ERROR:", e$message, "\n")
+      cat("SUMMARY: Debugging suggestions:\n")
+      cat("   1. Check internet connection for GEO downloads\n")
+      cat("   2. Try: Rscript run_pipeline_clean.R --clean --fresh\n")
+      cat("   3. Check available disk space\n")
+      cat("INFO: Proceeding without batch correction\n")
+    })
   }
   
   return(list(
@@ -909,6 +946,13 @@ determine_platform_type <- function(dataset) {
   
   # Fallback: check data range
   expr_data <- dataset$expression_matrix
+  
+  # Check if expression matrix is empty or null
+  if (is.null(expr_data) || length(expr_data) == 0 || all(is.na(expr_data))) {
+    warning("Expression matrix is empty or null - cannot determine data type")
+    return("unknown")
+  }
+  
   if (max(expr_data, na.rm = TRUE) < 20 && min(expr_data, na.rm = TRUE) > 0) {
     return("microarray")  # Likely log2 transformed
   } else {
@@ -922,6 +966,12 @@ determine_platform_type <- function(dataset) {
 #' @return Processed dataset
 preprocess_microarray_data <- function(dataset) {
   expr_matrix <- dataset$expression_matrix
+  
+  # Check if expression matrix is valid
+  if (is.null(expr_matrix) || length(expr_matrix) == 0 || all(is.na(expr_matrix))) {
+    warning("Cannot preprocess empty expression matrix")
+    return(NULL)
+  }
   
   # Check if data needs log2 transformation
   if (max(expr_matrix, na.rm = TRUE) > 50) {
@@ -1196,18 +1246,24 @@ apply_batch_correction_pipeline <- function(processed_datasets, use_combat = TRU
         }
         
         # Track batch information
-        batch_info <- c(batch_info, rep(i, ncol(expr_matrix)))
+        batch_info <- c(batch_info, rep(dataset_id, ncol(expr_matrix)))
         all_datasets_info[[dataset_id]] <- list(start_col = ifelse(is.null(combined_matrix), 1, ncol(combined_matrix) - ncol(expr_matrix) + 1),
                                                end_col = ifelse(is.null(combined_matrix), ncol(expr_matrix), ncol(combined_matrix)))
       }
     }
     
-    # Apply ComBat if we have multiple batches
-    if (length(unique(batch_info)) > 1 && !is.null(combined_matrix)) {
+    # Apply ComBat if we have multiple batches and valid data
+    if (length(batch_info) > 0 && length(unique(batch_info)) > 1 && !is.null(combined_matrix) && nrow(combined_matrix) > 0) {
       cat("🔬 COMBAT: Applying batch correction to", nrow(combined_matrix), "genes across", length(unique(batch_info)), "batches\n")
       
-      # Run ComBat
-      corrected_matrix <- ComBat(dat = combined_matrix, batch = batch_info, par.prior = TRUE, prior.plots = FALSE)
+      # Run ComBat with proper error handling
+      tryCatch({
+        corrected_matrix <- ComBat(dat = combined_matrix, batch = as.factor(batch_info), par.prior = TRUE, prior.plots = FALSE)
+      }, error = function(e) {
+        cat("⚠️ WARNING: ComBat failed:", e$message, "\n")
+        cat("INFO: Proceeding without batch correction\n")
+        corrected_matrix <<- combined_matrix
+      })
       
       # Split back into individual datasets
       corrected_datasets <- processed_datasets
