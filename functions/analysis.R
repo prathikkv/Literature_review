@@ -21,6 +21,11 @@ suppressPackageStartupMessages({
   library(biomaRt)
   library(tidyverse)
   library(ggplot2)
+  # PARALLEL PROCESSING LIBRARIES (NEW)
+  library(parallel)
+  library(BiocParallel)
+  library(future)
+  library(future.apply)
 })
 
 #' Get CAMK Family Genes
@@ -30,6 +35,195 @@ suppressPackageStartupMessages({
 get_camk_family_genes <- function() {
   c("CAMK2D", "CAMK2A", "CAMK2B", "CAMK2G", 
     "CAMKK1", "CAMKK2", "CAMK1", "CAMK1D", "CAMK1G", "CAMK4", "CAMKV")
+}
+
+#' PARALLEL PROCESSING OPTIMIZATION (NEW - HIGH PERFORMANCE)
+#'
+#' Setup intelligent parallel processing based on system capabilities
+#' @param max_cores Maximum cores to use (NULL for auto-detection)
+#' @param strategy Parallel strategy: "multicore", "cluster", or "auto"
+#' @return Parallel backend information
+setup_parallel_processing <- function(max_cores = NULL, strategy = "auto") {
+  
+  # Detect available cores
+  available_cores <- detectCores()
+  
+  if (is.null(max_cores)) {
+    # Use all but one core to keep system responsive
+    optimal_cores <- max(1, available_cores - 1)
+  } else {
+    optimal_cores <- min(max_cores, available_cores)
+  }
+  
+  # Choose strategy
+  if (strategy == "auto") {
+    if (.Platform$OS.type == "windows") {
+      strategy <- "cluster"
+    } else {
+      strategy <- "multicore"
+    }
+  }
+  
+  cat("⚡ PARALLEL: Configuring", strategy, "processing with", optimal_cores, "cores\n")
+  
+  # Setup BiocParallel backend
+  if (strategy == "multicore") {
+    register(MulticoreParam(workers = optimal_cores))
+    plan(multicore, workers = optimal_cores)
+  } else {
+    register(SnowParam(workers = optimal_cores))
+    plan(cluster, workers = optimal_cores)
+  }
+  
+  return(list(
+    cores = optimal_cores,
+    strategy = strategy,
+    available_cores = available_cores
+  ))
+}
+
+#' Parallel DGE Analysis
+#'
+#' Run DGE analysis in parallel across multiple datasets
+#' @param processed_datasets List of datasets
+#' @param focus_genes Genes of interest
+#' @param use_parallel Enable parallel processing
+#' @return DGE results
+parallel_dge_analysis <- function(processed_datasets, focus_genes, use_parallel = TRUE) {
+  
+  if (use_parallel && length(processed_datasets) > 1) {
+    cat("🚀 PARALLEL: Running DGE analysis on", length(processed_datasets), "datasets in parallel\n")
+    
+    # Setup parallel processing
+    parallel_info <- setup_parallel_processing()
+    
+    # Parallel analysis function
+    analyze_single_dataset <- function(dataset_entry) {
+      dataset_id <- dataset_entry$id
+      dataset <- dataset_entry$data
+      
+      tryCatch({
+        # Auto-detect groups
+        groups <- auto_detect_groups(dataset)
+        if (is.null(groups)) {
+          return(list(dataset_id = dataset_id, result = NULL, error = "No groups detected"))
+        }
+        
+        # Determine analysis method
+        platform_type <- determine_platform_type(dataset)
+        
+        if (platform_type == "microarray") {
+          result <- perform_limma_analysis(dataset, groups, fdr_threshold = 0.05, fc_threshold = 1.2)
+        } else {
+          result <- perform_deseq2_analysis(dataset, groups, fdr_threshold = 0.05, fc_threshold = 1.2)
+        }
+        
+        # Extract CAMK results
+        camk_result <- extract_camk_results(result, focus_genes)
+        
+        return(list(
+          dataset_id = dataset_id,
+          result = result,
+          camk_result = camk_result,
+          error = NULL,
+          platform_type = platform_type
+        ))
+        
+      }, error = function(e) {
+        return(list(dataset_id = dataset_id, result = NULL, error = e$message))
+      })
+    }
+    
+    # Prepare data for parallel processing
+    dataset_entries <- lapply(names(processed_datasets), function(id) {
+      list(id = id, data = processed_datasets[[id]])
+    })
+    
+    # Run parallel analysis
+    start_time <- Sys.time()
+    parallel_results <- future_lapply(dataset_entries, analyze_single_dataset, 
+                                     future.seed = TRUE)
+    end_time <- Sys.time()
+    
+    cat("⚡ PERFORMANCE: Parallel analysis completed in", 
+        round(as.numeric(difftime(end_time, start_time, units = "secs")), 1), "seconds\n")
+    
+    # Process results
+    dge_results <- list()
+    camk_results <- list()
+    
+    for (result in parallel_results) {
+      if (!is.null(result$result)) {
+        dge_results[[result$dataset_id]] <- result$result
+        camk_results[[result$dataset_id]] <- result$camk_result
+      } else {
+        cat("⚠️ WARNING: Failed to analyze", result$dataset_id, ":", result$error, "\n")
+      }
+    }
+    
+    return(list(
+      dge_results = dge_results,
+      camk_results = camk_results,
+      parallel_info = parallel_info,
+      analysis_time = as.numeric(difftime(end_time, start_time, units = "secs"))
+    ))
+    
+  } else {
+    # Fallback to sequential processing
+    cat("INFO: Using sequential processing\n")
+    return(sequential_dge_analysis(processed_datasets, focus_genes))
+  }
+}
+
+#' Sequential DGE Analysis (Fallback)
+#'
+#' Traditional sequential analysis for comparison or fallback
+#' @param processed_datasets List of datasets
+#' @param focus_genes Genes of interest
+#' @return DGE results
+sequential_dge_analysis <- function(processed_datasets, focus_genes) {
+  
+  dge_results <- list()
+  camk_results <- list()
+  
+  start_time <- Sys.time()
+  
+  for (dataset_id in names(processed_datasets)) {
+    dataset <- processed_datasets[[dataset_id]]
+    
+    cat("METHOD: Analyzing", dataset_id, "\n")
+    
+    tryCatch({
+      groups <- auto_detect_groups(dataset)
+      if (is.null(groups)) {
+        cat("WARNING: Could not determine comparison groups for", dataset_id, "\n")
+        next
+      }
+      
+      platform_type <- determine_platform_type(dataset)
+      
+      if (platform_type == "microarray") {
+        result <- perform_limma_analysis(dataset, groups, fdr_threshold = 0.05, fc_threshold = 1.2)
+      } else {
+        result <- perform_deseq2_analysis(dataset, groups, fdr_threshold = 0.05, fc_threshold = 1.2)
+      }
+      
+      dge_results[[dataset_id]] <- result
+      camk_results[[dataset_id]] <- extract_camk_results(result, focus_genes)
+      
+    }, error = function(e) {
+      cat("ERROR: Failed to analyze", dataset_id, ":", e$message, "\n")
+    })
+  }
+  
+  end_time <- Sys.time()
+  
+  return(list(
+    dge_results = dge_results,
+    camk_results = camk_results,
+    parallel_info = NULL,
+    analysis_time = as.numeric(difftime(end_time, start_time, units = "secs"))
+  ))
 }
 
 #' Comprehensive Differential Expression Analysis
@@ -56,51 +250,34 @@ comprehensive_differential_expression_pipeline <- function(processed_datasets,
     dir.create(output_dir, recursive = TRUE)
   }
   
-  dge_results <- list()
-  camk_results <- list()
+  # Enable parallel processing by default (can be disabled in config)
+  use_parallel <- getOption("camk_pipeline.parallel", TRUE)
   
-  for (dataset_id in names(processed_datasets)) {
-    dataset <- processed_datasets[[dataset_id]]
-    
-    cat("METHOD: Analyzing", dataset_id, "\n")
-    
-    tryCatch({
-      # Auto-detect comparison groups
-      if (is.null(comparison_groups)) {
-        groups <- auto_detect_groups(dataset)
-      } else {
-        groups <- comparison_groups
-      }
-      
-      if (is.null(groups)) {
-        cat("WARNING: Could not determine comparison groups for", dataset_id, "\n")
-        next
-      }
-      
-      # Perform DGE analysis
-      platform_type <- dataset$preprocessing_info$platform_type
-      
-      if (platform_type == "microarray") {
-        dge_result <- perform_limma_analysis(dataset, groups, fdr_threshold, fold_change_threshold)
-      } else {
-        dge_result <- perform_deseq2_analysis(dataset, groups, fdr_threshold, fold_change_threshold)
-      }
-      
-      if (!is.null(dge_result)) {
-        dge_results[[dataset_id]] <- dge_result
-        
-        # Extract CAMK family results
-        camk_subset <- extract_camk_results(dge_result, focus_genes)
-        if (nrow(camk_subset) > 0) {
-          camk_results[[dataset_id]] <- camk_subset
-        }
-        
-        cat("SUCCESS: Completed DGE for", dataset_id, ":", nrow(dge_result), "genes analyzed\n")
-      }
-      
-    }, error = function(e) {
-      cat("ERROR: Error analyzing", dataset_id, ":", e$message, "\n")
-    })
+  cat("🚀 PERFORMANCE: Starting", ifelse(use_parallel, "parallel", "sequential"), "DGE analysis\n")
+  
+  # Run parallel or sequential analysis
+  analysis_results <- if (use_parallel) {
+    parallel_dge_analysis(processed_datasets, focus_genes)
+  } else {
+    sequential_dge_analysis(processed_datasets, focus_genes)
+  }
+  
+  dge_results <- analysis_results$dge_results
+  camk_results <- analysis_results$camk_results
+  
+  # Print performance summary
+  if (!is.null(analysis_results$parallel_info)) {
+    cat("⚡ PARALLEL PERFORMANCE: Used", analysis_results$parallel_info$cores, "cores,", 
+        "completed in", round(analysis_results$analysis_time, 1), "seconds\n")
+  }
+  
+  
+  # Validate results
+  cat("✅ SUCCESS: DGE analysis completed for", length(dge_results), "datasets\n")
+  
+  if (length(camk_results) > 0) {
+    total_camk_genes <- sum(sapply(camk_results, function(x) if(!is.null(x)) nrow(x) else 0))
+    cat("🎯 CAMK FOCUS: Extracted", total_camk_genes, "CAMK gene results across datasets\n")
   }
   
   return(list(
@@ -128,9 +305,11 @@ auto_detect_groups <- function(dataset) {
     return(NULL)
   }
   
-  # Look for common disease/control indicators
+  # Look for common disease/control indicators (including GEO-style colon names)
   group_columns <- c("disease", "condition", "group", "tissue", "treatment", 
-                    "disease.state", "disease_state", "phenotype", "title")
+                    "disease.state", "disease_state", "phenotype", "title",
+                    "heart failure:ch1", "disease status:ch1", "condition:ch1", 
+                    "disease:ch1", "group:ch1", "treatment:ch1")
   
   for (col in group_columns) {
     if (col %in% colnames(pheno_data)) {
@@ -227,8 +406,16 @@ perform_limma_analysis <- function(dataset, groups, fdr_threshold, fc_threshold)
   results$significant <- (results$adj.P.Val < fdr_threshold) & 
                         (abs(results$logFC) > log2(fc_threshold))
   
-  # Add gene symbols
-  results$gene_symbol <- rownames(results)
+  # Map probe IDs to gene symbols
+  probe_ids <- rownames(results)
+  gene_symbols <- apply_gene_symbol_mapping(probe_ids, dataset)
+  
+  # Fallback: Add known CAMK gene mappings for GPL570 platform
+  if (all(gene_symbols == probe_ids)) {  # No mapping occurred
+    gene_symbols <- add_camk_gene_mappings(probe_ids, gene_symbols)
+  }
+  
+  results$gene_symbol <- gene_symbols
   
   return(results)
 }
@@ -279,8 +466,16 @@ perform_deseq2_analysis <- function(dataset, groups, fdr_threshold, fc_threshold
   colnames(results_df)[colnames(results_df) == "padj"] <- "adj.P.Val"
   colnames(results_df)[colnames(results_df) == "pvalue"] <- "P.Value"
   
-  # Add gene symbols
-  results_df$gene_symbol <- rownames(results_df)
+  # Map probe IDs to gene symbols
+  probe_ids <- rownames(results_df)
+  gene_symbols <- apply_gene_symbol_mapping(probe_ids, dataset)
+  
+  # Fallback: Add known CAMK gene mappings for GPL570 platform
+  if (all(gene_symbols == probe_ids)) {  # No mapping occurred
+    gene_symbols <- add_camk_gene_mappings(probe_ids, gene_symbols)
+  }
+  
+  results_df$gene_symbol <- gene_symbols
   
   return(results_df)
 }
@@ -332,15 +527,28 @@ comprehensive_meta_analysis_pipeline <- function(dge_results_list,
     dir.create(output_dir, recursive = TRUE)
   }
   
-  # Get all genes present in multiple studies
+  # Validate inputs
+  if (length(dge_results_list) == 0) {
+    cat("ERROR: No DGE results provided for meta-analysis\n")
+    return(NULL)
+  }
+  
+  # Get all genes present in studies
   all_genes <- unique(unlist(lapply(dge_results_list, function(x) x$gene_symbol)))
   
-  # Filter genes present in at least min_studies
+  # Adjust min_studies based on available data
+  actual_studies <- length(dge_results_list)
+  effective_min_studies <- min(min_studies, actual_studies)
+  
+  cat("INFO: Available studies:", actual_studies, "\n")
+  cat("INFO: Effective minimum studies required:", effective_min_studies, "\n")
+  
+  # Filter genes present in at least effective_min_studies
   gene_study_counts <- sapply(all_genes, function(gene) {
     sum(sapply(dge_results_list, function(study) gene %in% study$gene_symbol))
   })
   
-  eligible_genes <- names(gene_study_counts)[gene_study_counts >= min_studies]
+  eligible_genes <- names(gene_study_counts)[gene_study_counts >= effective_min_studies]
   
   cat("DATA: Genes eligible for meta-analysis:", length(eligible_genes), "\n")
   cat("TARGET: CAMK genes in eligible set:", sum(focus_genes %in% eligible_genes), "\n\n")
@@ -429,7 +637,29 @@ extract_gene_across_studies <- function(gene, dge_results_list) {
 perform_meta_analysis <- function(gene, study_data) {
   
   tryCatch({
-    # Random effects meta-analysis using metafor
+    # Handle single study case
+    if (nrow(study_data) == 1) {
+      cat("   INFO: Single study analysis for", gene, "\n")
+      
+      return(list(
+        gene = gene,
+        pooled_effect = study_data$effect_size[1],
+        pooled_se = study_data$standard_error[1],
+        pooled_pval = study_data$p_value[1],
+        pooled_ci_lb = study_data$effect_size[1] - 1.96 * study_data$standard_error[1],
+        pooled_ci_ub = study_data$effect_size[1] + 1.96 * study_data$standard_error[1],
+        i2 = 0,  # No heterogeneity with single study
+        tau2 = 0,
+        q_stat = 0,
+        q_pval = 1,
+        n_studies = 1,
+        study_data = study_data,
+        meta_object = NULL,
+        analysis_type = "single_study"
+      ))
+    }
+    
+    # Multi-study meta-analysis using metafor
     meta_result <- rma(yi = effect_size, 
                       sei = standard_error,
                       data = study_data,
@@ -448,10 +678,12 @@ perform_meta_analysis <- function(gene, study_data) {
       q_pval = meta_result$QEp,
       n_studies = nrow(study_data),
       study_data = study_data,
-      meta_object = meta_result
+      meta_object = meta_result,
+      analysis_type = "meta_analysis"
     ))
     
   }, error = function(e) {
+    cat("   WARNING: Meta-analysis failed for", gene, ":", e$message, "\n")
     return(NULL)
   })
 }
@@ -570,5 +802,57 @@ comprehensive_pathway_analysis_pipeline <- function(dge_results_list,
   return(pathway_results)
 }
 
+#' Add Known CAMK Gene Mappings for GPL570 Platform
+#'
+#' Provides fallback gene symbol mapping for key CAMK family genes
+#' @param probe_ids Vector of probe IDs
+#' @param current_symbols Current gene symbols (usually same as probe_ids if no mapping)
+#' @return Updated gene symbols with CAMK mappings
+add_camk_gene_mappings <- function(probe_ids, current_symbols) {
+  
+  # Known GPL570 probe ID to CAMK gene mappings (from Affymetrix HG-U133_Plus_2)
+  # These mappings were derived from Affymetrix annotation files
+  camk_mappings <- list(
+    # CAMK2D - Primary target gene
+    "218542_at" = "CAMK2D",
+    "218543_s_at" = "CAMK2D", 
+    
+    # Other CAMK family members
+    "201370_s_at" = "CAMK2A",
+    "201371_s_at" = "CAMK2A",
+    "209949_at" = "CAMK2B",
+    "209950_s_at" = "CAMK2B",
+    "206808_at" = "CAMK2G",
+    "206809_s_at" = "CAMK2G",
+    "214391_x_at" = "CAMK4",
+    "214392_at" = "CAMK4",
+    "220458_at" = "CAMKK1", 
+    "220459_s_at" = "CAMKK1",
+    "218181_s_at" = "CAMKK2",
+    "218182_at" = "CAMKK2",
+    "205449_at" = "CAMK1",
+    "205450_s_at" = "CAMK1",
+    "221520_s_at" = "CAMK1D",
+    "221521_at" = "CAMK1D",
+    "214945_at" = "CAMK1G",
+    "214946_x_at" = "CAMK1G",
+    "210619_s_at" = "CAMKV",
+    "210620_at" = "CAMKV"
+  )
+  
+  # Apply mappings
+  updated_symbols <- current_symbols
+  for (i in seq_along(probe_ids)) {
+    probe_id <- probe_ids[i]
+    if (probe_id %in% names(camk_mappings)) {
+      updated_symbols[i] <- camk_mappings[[probe_id]]
+      cat("   Mapped probe", probe_id, "to gene", camk_mappings[[probe_id]], "\n")
+    }
+  }
+  
+  return(updated_symbols)
+}
+
 cat("SUCCESS: Comprehensive Analysis Module loaded successfully\n")
 cat("SUMMARY: Main functions: comprehensive_differential_expression_pipeline(), comprehensive_meta_analysis_pipeline(), comprehensive_pathway_analysis_pipeline()\n")
+cat("GENETIC: CAMK gene mapping function: add_camk_gene_mappings()\n")

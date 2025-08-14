@@ -28,9 +28,16 @@ for (pkg in required_packages) {
 }
 
 # Load utility functions
-source("../../functions/data_processing.R")
-source("../../functions/analysis.R")
-source("../../functions/utilities.R")
+# Set working directory to project root if needed
+if (!file.exists("functions/data_processing.R")) {
+  if (file.exists("../../functions/data_processing.R")) {
+    setwd("../..")
+  }
+}
+
+source("functions/data_processing.R")
+source("functions/analysis.R")
+source("functions/utilities.R")
 
 #' CAMK2D-Specific DGE Analysis for Individual Datasets
 #'
@@ -532,13 +539,13 @@ camk2d_independent_analysis <- function(dataset_list, focus_gene = "CAMK2D", out
           length = "1332 amino acids",
           domains = c("Kinase domain", "Regulatory domain", "Association domain"),
           tissue_specificity = "Heart, brain",
-          function = "Primary cardiac isoform"
+          functional_role = "Primary cardiac isoform"
         ),
         "CAMK2D_v2" = list(
           length = "1299 amino acids", 
           domains = c("Kinase domain", "Regulatory domain"),
           tissue_specificity = "Heart",
-          function = "Truncated regulatory domain"
+          functional_role = "Truncated regulatory domain"
         )
       ),
       

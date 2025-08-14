@@ -1,25 +1,118 @@
-# CAMK2D Research Platform Configuration
-# ======================================
-# Production configuration for the CAMK2D research platform
+# CAMK2D Multi-Modal Research Platform Configuration
+# =================================================
+# Comprehensive configuration for multi-modal CAMK2D atrial fibrillation research
 
 # Research Focus Settings
 research:
-  focus_area: "both"              # Options: "aFIB", "HF", "both"
-  species: "human"                # Primary species for analysis
+  focus_area: "camk2d_atrial_fibrillation"   # Updated: Atrial fibrillation focus
+  species: "human"                           # Primary species for analysis
+  primary_gene: "CAMK2D"                    # Primary gene of interest
+  condition: "atrial_fibrillation"          # Primary condition study
+  gene_family:                              # CAMK family genes
+    - "CAMK1"
+    - "CAMK1D" 
+    - "CAMK1G"
+    - "CAMK2A"
+    - "CAMK2B"
+    - "CAMK2D"
+    - "CAMK2G"
+    - "CAMK4"
+    - "CAMKK1"
+    - "CAMKK2"
+    - "CAMKV"
   
-# Dataset Processing Limits
+# Multi-Modal Dataset Configuration
 datasets:
-  max_datasets: 6                # Updated to reflect cleaned, working datasets
-  min_samples: 10                # Minimum samples per dataset (statistical power)
-  min_camk2d_expression: 2       # Minimum CAMK2D expression level (biological relevance)
+  total_datasets: 8              # Total datasets across all modalities
+  comparison_type: "healthy_vs_disease"    # Focus ONLY on healthy vs AF comparisons
+  exclude_disease_vs_disease: false        # Updated: Allow AF vs SR comparisons
+  multi_modal_analysis: true    # Enable multi-modal analysis framework
   
-# Expression Data Settings
+  # Microarray Datasets (Affymetrix U133 Plus 2.0)
+  microarray:
+    platform: "GPL570"           # Affymetrix Human Genome U133 Plus 2.0 Array
+    datasets:
+      GSE79768:
+        samples: 26              # 14 AF + 12 Control
+        af_samples: 14
+        control_samples: 12
+        tissue: "left_atrium"
+        priority: "high"
+      GSE31821:
+        samples: 6               # 4 AF + 2 Control  
+        af_samples: 4
+        control_samples: 2
+        tissue: "atrium"
+        priority: "medium"
+      GSE115574:
+        samples: 29              # 14 AF + 15 Control
+        af_samples: 14
+        control_samples: 15
+        tissue: "left_atrium"
+        priority: "high"
+      GSE41177:
+        samples: 38              # 32 AF + 6 Control
+        af_samples: 32
+        control_samples: 6
+        tissue: "atrium" 
+        priority: "high"
+  
+  # Bulk RNA-seq Datasets
+  rna_seq:
+    datasets:
+      GSE161472:
+        status: "processed"      # Already processed
+        focus: "heart_failure"
+        tissue: "heart"
+        priority: "medium"
+      GSE128188:
+        samples: 10              # 5 SR + 5 AF
+        af_samples: 5
+        sr_samples: 5
+        platform: "Illumina NextSeq 500"
+        tissue: "atrial_appendage"
+        priority: "high"
+  
+  # Single-cell RNA-seq Datasets  
+  single_cell:
+    datasets:
+      GSE224997:
+        status: "processed"      # Already processed - snRNA-seq/scATAC-seq
+        samples: 24
+        individuals: 3
+        data_type: "snRNA-seq/scATAC-seq"
+        tissue: "heart"
+        priority: "high"
+      GSE261170:
+        focus: "monocyte_macrophage"
+        tissue: "left_atrium"
+        data_type: "scRNA-seq"
+        priority: "high"
+  
+# Multi-Modal Expression Analysis Settings
 expression:
   validation_enabled: true       # Enable expression data download and validation
   validate_camk2d: true         # Require CAMK2D detection in all datasets
   cache_downloads: true         # Cache downloads to improve performance
   max_retries: 3               # Maximum retry attempts for failed downloads
   timeout_seconds: 600         # Download timeout (10 minutes)
+  
+  # Modality-specific settings
+  microarray:
+    normalization: "RMA"        # RMA normalization for Affymetrix
+    probe_mapping: "gene_symbol" # Map probes to gene symbols
+    log_transform: true         # Log2 transform expression values
+    
+  rna_seq:
+    count_threshold: 10         # Minimum count threshold
+    cpm_threshold: 1           # Counts per million threshold
+    analysis_method: "DESeq2"   # Primary analysis method
+    
+  single_cell:
+    min_cells: 3               # Minimum cells expressing gene
+    min_genes: 200             # Minimum genes per cell
+    max_genes: 5000            # Maximum genes per cell (filter doublets)
+    mitochondrial_percent: 20   # Max mitochondrial gene percentage
   
 # Output Settings
 output:
@@ -51,20 +144,31 @@ files:
   max_cache_size_gb: 5        # Maximum cache size in GB
   backup_results: false       # Create backup copies of important results
 
-# Cache Management (Production Ready)
+# Multi-Modal Cache Management
 cache:
-  max_size_mb: 100            # Maximum total cache size in MB
-  expiration_days: 7          # Remove files older than this many days
+  max_size_mb: 500            # Increased for multi-modal data (500MB)
+  expiration_days: 14         # Extended retention for multi-modal datasets
   preserve_processed_data: true  # Always preserve _processed.rds files
   auto_cleanup: true          # Enable automatic cleanup during pipeline runs
   cleanup_mode: "smart"       # Cleanup mode: smart, full, nuclear
   rmarkdown_cache_cleanup: true  # Remove R Markdown knitting cache
   
-# Fresh Data Download Settings
+  # Modality-specific cache directories
+  directories:
+    microarray: "cache/microarray"
+    rna_seq: "cache/rna_seq"
+    single_cell: "cache/single_cell"
+    comprehensive: "cache/comprehensive"
+  
+# Multi-Modal Download Settings
 download:
   force_fresh: false          # Force fresh downloads (ignore cache)
   max_retries: 5             # Maximum retry attempts for failed downloads
-  timeout_minutes: 30        # Download timeout per dataset
-  parallel_downloads: false  # Enable parallel downloads (experimental)
+  timeout_minutes: 45        # Extended timeout for larger datasets
+  parallel_downloads: true   # Enable parallel downloads for efficiency
   verify_checksums: true     # Verify data integrity after download
   resume_partial: true       # Resume partial downloads
+  
+  # Batch download settings
+  batch_size: 3              # Number of datasets to download simultaneously
+  retry_delay: 30            # Seconds to wait between retry attempts
