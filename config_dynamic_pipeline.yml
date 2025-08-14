@@ -1,0 +1,415 @@
+# CAMK2D Dynamic Pipeline Configuration
+# ====================================
+# Comprehensive configuration for dynamic, modular CAMK2D analysis pipeline
+# All hardcoded parameters extracted from scripts for centralized management
+
+# ═══════════════════════════════════════════════════════════════
+# PIPELINE ARCHITECTURE
+# ═══════════════════════════════════════════════════════════════
+pipeline:
+  name: "CAMK2D Cardiovascular Analysis Pipeline"
+  version: "2.0.0-dynamic"
+  execution_mode: "dynamic"  # dynamic | legacy
+  
+  # Pipeline steps in execution order
+  steps:
+    - step_01_data_loader
+    - step_02_preprocessing
+    - step_03_dge_analysis
+    - step_04_meta_analysis
+    - step_05_report_generator
+  
+  # Step dependencies (for parallel execution optimization)
+  dependencies:
+    step_01_data_loader: []
+    step_02_preprocessing: ["step_01_data_loader"]
+    step_03_dge_analysis: ["step_02_preprocessing"]
+    step_04_meta_analysis: ["step_03_dge_analysis"]
+    step_05_report_generator: ["step_04_meta_analysis"]
+  
+  # Parallel execution settings
+  parallel:
+    enabled: true
+    max_cores: null  # null = auto-detect optimal
+    strategy: "auto"  # auto | multicore | cluster
+    independent_datasets: true  # Process datasets in parallel where possible
+
+# ═══════════════════════════════════════════════════════════════
+# DATASET CONFIGURATION
+# ═══════════════════════════════════════════════════════════════
+datasets:
+  # Complete dataset configuration (extracted from comprehensive_6_dataset_pipeline.R:21-76)
+  active_datasets:
+    GSE57338:
+      description: "Heart failure (DCM + Ischemic) vs non-failing hearts"
+      disease_type: "Heart failure (DCM + Ischemic)"
+      control_type: "Non-failing hearts"
+      biological_context: "Ventricular heart failure"
+      priority: "HIGH"
+      expected_samples: 313
+      inclusion_reason: "Large sample size, clear disease vs healthy comparison"
+      platform: "GPL570"
+      tissue: "heart"
+      cache_location: "cache/comprehensive/GSE57338_processed.rds"
+      fallback_location: "cache/microarray/GSE57338_processed.rds"
+      
+    GSE41177:
+      description: "Atrial fibrillation vs sinus rhythm"
+      disease_type: "Atrial fibrillation"
+      control_type: "Sinus rhythm"
+      biological_context: "Atrial arrhythmia"
+      priority: "MODERATE"
+      expected_samples: 38
+      inclusion_reason: "AF vs SR comparison, moderate sample size"
+      platform: "GPL570"
+      tissue: "atrium"
+      cache_location: "cache/microarray/GSE41177_processed.rds"
+      
+    GSE79768:
+      description: "Atrial fibrillation vs sinus rhythm"
+      disease_type: "Atrial fibrillation"
+      control_type: "Sinus rhythm"
+      biological_context: "Atrial arrhythmia"
+      priority: "MODERATE"
+      expected_samples: 26
+      inclusion_reason: "AF vs SR comparison, supports GSE41177 findings"
+      platform: "GPL570"
+      tissue: "left_atrium"
+      cache_location: "cache/microarray/GSE79768_processed.rds"
+      
+    GSE115574:
+      description: "Atrial fibrillation vs sinus rhythm"
+      disease_type: "Atrial fibrillation"
+      control_type: "Sinus rhythm"
+      biological_context: "Atrial arrhythmia"
+      priority: "MODERATE"
+      expected_samples: 59
+      inclusion_reason: "Largest AF dataset, good statistical power"
+      platform: "GPL570"
+      tissue: "left_atrium"
+      cache_location: "cache/microarray/GSE115574_processed.rds"
+      
+    GSE31821:
+      description: "Atrial fibrillation vs sinus rhythm"
+      disease_type: "Atrial fibrillation"
+      control_type: "Sinus rhythm"
+      biological_context: "Atrial arrhythmia"
+      priority: "LOW"
+      expected_samples: 6
+      inclusion_reason: "Small but supports AF pattern, literature validation"
+      platform: "GPL570"
+      tissue: "atrium"
+      cache_location: "cache/microarray/GSE31821_processed.rds"
+      status: "optional"  # Skip if not found
+      
+    GSE14975:
+      description: "Heart failure vs healthy"
+      disease_type: "Heart failure"
+      control_type: "Healthy controls"
+      biological_context: "Heart failure"
+      priority: "LOW"
+      expected_samples: 10
+      inclusion_reason: "Small but supports heart failure pattern"
+      platform: "GPL570"
+      tissue: "heart"
+      cache_location: "cache/microarray/GSE14975_processed.rds"
+      status: "optional"  # Skip if not found
+
+  # Dataset discovery settings
+  discovery:
+    auto_detect: true
+    cache_directories: ["cache/microarray", "cache/comprehensive"]
+    file_pattern: "*_processed.rds"
+    validate_structure: true
+
+# ═══════════════════════════════════════════════════════════════
+# GENE DEFINITIONS
+# ═══════════════════════════════════════════════════════════════
+genes:
+  # CAMK family genes (extracted from functions/camk_definitions.R)
+  camk_core_genes:
+    - "CAMK2D"  # Primary focus
+    - "CAMK2A"
+    - "CAMK2B" 
+    - "CAMK2G"
+    - "CAMKK1"
+    - "CAMKK2"
+    - "CAMK1"
+    - "CAMK1D"
+    - "CAMK1G"
+    - "CAMK4"
+    - "CAMKV"
+  
+  # Gene validation
+  validation:
+    require_primary_gene: "CAMK2D"
+    min_genes_detected: 5  # Minimum CAMK genes for analysis inclusion
+    
+  # Priority-specific thresholds (extracted from comprehensive_6_dataset_pipeline.R:169)
+  minimum_genes:
+    HIGH: 8
+    MODERATE: 5
+    LOW: 3
+
+# ═══════════════════════════════════════════════════════════════
+# ANALYSIS PARAMETERS
+# ═══════════════════════════════════════════════════════════════
+analysis:
+  # Differential expression settings
+  differential_expression:
+    method: "limma"
+    adjust_method: "BH"  # Benjamini-Hochberg FDR correction
+    fdr_threshold: 0.05
+    log_transform: true
+    design_formula: "~ groups_vector"
+    contrast_interpretation: "Disease_vs_Control"  # Positive logFC = UP in Disease
+    
+  # Quality control thresholds (extracted from comprehensive_6_dataset_pipeline.R:219)
+  quality_control:
+    high_logfc_threshold: 0.8   # |logFC| > 0.8 flagged as HIGH_LOGFC
+    low_effect_threshold: 0.01  # |logFC| < 0.01 flagged as LOW_EFFECT
+    min_samples_per_group: 3
+    max_sample_imbalance_ratio: 10  # e.g., 32 vs 6 samples flagged
+    
+  # Meta-analysis settings (extracted from fixed_meta_analysis.R)
+  meta_analysis:
+    method: "fixed_effects"  # Fixed-effects model
+    package: "metafor"
+    min_datasets: 2
+    quality_filters:
+      max_absolute_logfc: 0.8  # Filter extreme values before meta-analysis
+    heterogeneity:
+      calculate_i2: true
+      report_q_test: true
+    significance_threshold: 0.05
+    
+  # Group detection settings (extracted from enhanced_group_detection_corrected.R)
+  group_detection:
+    priority_columns:
+      - "source_name_ch1"
+      - "title" 
+      - "description"
+      - "disease status:ch1"
+      - "heart failure:ch1"
+      - "characteristics_ch1"
+    
+    # Biological classification patterns
+    control_patterns:
+      - "control"
+      - "normal"
+      - "non-failing"
+      - "healthy"
+      - "donor"
+      - "sinus rhythm"
+      - "SR"
+      - "wild type"
+      - "WT"
+    
+    disease_patterns:
+      - "cardiomyopathy"
+      - "CMP"
+      - "heart failure"
+      - "HF"
+      - "ischemic"
+      - "MI"
+      - "infarct"
+      - "pathological"
+      - "atrial fibrillation"
+      - "AF"
+      - "dilated"
+      - "hypertrophic"
+      - "disease"
+    
+    validation:
+      min_control_samples: 3
+      min_disease_samples: 3
+      max_overlap_samples: 0
+      max_unclassified_percent: 0.2
+      
+# ═══════════════════════════════════════════════════════════════
+# FILE PATHS AND I/O
+# ═══════════════════════════════════════════════════════════════
+paths:
+  # Input directories
+  cache_root: "cache"
+  functions_dir: "functions"
+  scripts_dir: "scripts"
+  
+  # Output structure (extracted from hardcoded paths)
+  output:
+    root: "output"
+    current: "output/current"
+    checkpoints: "output/checkpoints"
+    logs: "output/logs"
+    
+  # Specific output files (extracted from scripts)
+  output_files:
+    dge_results: "output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv"
+    meta_results: "output/current/CAMK_meta_analysis_FINAL.csv"
+    dataset_summary: "output/current/dataset_processing_summary_6_datasets.csv"
+    
+    # Legacy compatibility (for comparison)
+    legacy_dge: "output/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv"
+    legacy_meta: "output/CAMK_meta_analysis_FINAL.csv"
+    legacy_summary: "output/dataset_processing_summary_6_datasets.csv"
+  
+  # Report generation
+  reports:
+    template: "reports/CAMK_Analysis_Professional_Report.Rmd"
+    output_html: "reports/CAMK_Analysis_Professional_Report_DYNAMIC.html"
+    baseline_html: "reports/CAMK_Analysis_Professional_Report_BASELINE.html"
+
+# ═══════════════════════════════════════════════════════════════
+# PIPELINE EXECUTION CONTROL
+# ═══════════════════════════════════════════════════════════════
+execution:
+  # Checkpoint management
+  checkpoints:
+    enabled: true
+    auto_save: true
+    auto_resume: true
+    compression: true
+    retention_days: 30
+    
+  # Error handling
+  error_handling:
+    continue_on_dataset_failure: true
+    max_retries: 3
+    retry_delay_seconds: 5
+    fail_fast: false  # Continue pipeline even if some datasets fail
+    
+  # Validation
+  validation:
+    validate_inputs: true
+    validate_outputs: true
+    compare_with_baseline: true  # When available
+    numerical_tolerance: 1e-6
+    
+  # Logging
+  logging:
+    level: "INFO"  # DEBUG | INFO | WARNING | ERROR
+    file: "output/logs/pipeline_execution.log"
+    console_output: true
+    timestamp_format: "%Y-%m-%d %H:%M:%S"
+    include_performance_metrics: true
+
+# ═══════════════════════════════════════════════════════════════
+# PERFORMANCE AND OPTIMIZATION
+# ═══════════════════════════════════════════════════════════════
+performance:
+  # Memory management
+  memory:
+    cleanup_intermediate: true
+    gc_after_steps: true
+    max_memory_per_dataset_gb: 2
+    
+  # Caching
+  caching:
+    enable_step_cache: true
+    cache_intermediate_results: true
+    cache_timeout_hours: 24
+    
+  # Parallel processing
+  parallel_processing:
+    dataset_analysis: true  # Analyze datasets in parallel
+    meta_analysis: false    # Meta-analysis requires sequential execution
+    max_parallel_datasets: 4
+
+# ═══════════════════════════════════════════════════════════════
+# COMPARISON AND VALIDATION  
+# ═══════════════════════════════════════════════════════════════
+validation:
+  # Baseline comparison (for ensuring identical results)
+  baseline_comparison:
+    enabled: true
+    baseline_results:
+      camk2d_combined_logfc: 0.0552
+      camk2d_p_value: 1.52e-02
+      total_datasets_success: 4
+      total_samples: 436
+      significant_genes: 8
+      
+  # Numerical validation tolerances
+  tolerances:
+    logfc_tolerance: 1e-4
+    p_value_tolerance: 1e-6
+    sample_count_tolerance: 0  # Must be exact
+    
+  # Success criteria
+  success_criteria:
+    min_datasets_processed: 4
+    camk2d_must_be_significant: true
+    all_core_genes_detected: true
+    report_generation_success: true
+
+# ═══════════════════════════════════════════════════════════════
+# ENVIRONMENT AND DEPENDENCIES
+# ═══════════════════════════════════════════════════════════════
+environment:
+  # R package requirements (extracted from analysis.R)
+  required_packages:
+    base:
+      - "limma"
+      - "metafor" 
+      - "tidyverse"
+      - "yaml"
+    analysis:
+      - "DESeq2"
+      - "edgeR"
+      - "meta"
+    visualization:
+      - "ggplot2"
+      - "plotly"
+      - "DT"
+      - "kableExtra"
+      - "ggrepel"
+      - "gridExtra"
+    reporting:
+      - "rmarkdown"
+      - "knitr"
+      - "htmltools"
+    optional:
+      - "parallel"
+      - "BiocParallel"
+      - "future"
+      
+  # System requirements
+  system:
+    min_r_version: "4.0.0"
+    recommended_memory_gb: 8
+    min_disk_space_gb: 2
+
+# ═══════════════════════════════════════════════════════════════
+# DEVELOPMENT AND DEBUGGING
+# ═══════════════════════════════════════════════════════════════
+development:
+  # Debug settings
+  debug:
+    enabled: false
+    verbose_output: false
+    save_intermediate_objects: false
+    profiling: false
+    
+  # Testing
+  testing:
+    run_unit_tests: false
+    validate_each_step: true
+    create_test_reports: false
+    
+# ═══════════════════════════════════════════════════════════════
+# METADATA
+# ═══════════════════════════════════════════════════════════════
+metadata:
+  created_date: "2025-08-15"
+  created_by: "Claude Code Dynamic Pipeline Generator"
+  description: "Comprehensive configuration for CAMK2D cardiovascular analysis pipeline"
+  version_history:
+    - "1.0.0: Initial hardcoded pipeline"
+    - "2.0.0-dynamic: Configuration-driven modular pipeline"
+  
+  # Research context
+  research:
+    focus_gene: "CAMK2D"
+    disease_focus: "Cardiovascular disease (heart failure, atrial fibrillation)"
+    analysis_type: "Meta-analysis of differential gene expression"
+    significance: "Therapeutic target validation"
