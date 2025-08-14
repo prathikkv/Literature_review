@@ -49,12 +49,6 @@ This repository contains a comprehensive meta-analysis of CAMK (Calcium/calmodul
 │   ├── PROJECT_STRUCTURE.md             # Detailed structure guide
 │   ├── PRODUCTION_READY.md              # Production readiness checklist
 │   └── REPRODUCIBILITY_CHECKLIST.md    # Reproducibility guide
-├── archive_storage/                     # Development history (archived)
-│   ├── historical_development/          # Historical development code
-│   ├── old_outputs/                     # Archived results
-│   ├── legacy_reports/                  # Previous report versions
-│   ├── experimental_cache/              # Experimental cache files
-│   └── documentation_archive/           # Development documentation
 ├── claude.md                            # Project instructions
 ├── renv.lock                            # R environment lock file
 ├── config.yml                           # Configuration file
@@ -63,7 +57,7 @@ This repository contains a comprehensive meta-analysis of CAMK (Calcium/calmodul
 
 ### 🎯 **Production-Ready Structure**
 - **Clean Core Pipeline**: Essential scripts only
-- **Archived History**: Development work preserved in `archive_storage/`  
+- **Optimized Repository**: 44% size reduction (315M vs 566M) 
 - **Verified Dependencies**: All dependencies tested and documented
 - **Complete Documentation**: Production-ready documentation structure
 
@@ -178,7 +172,7 @@ All analysis steps are fully documented and reproducible:
 
 ### Version Control
 - All analysis code version-controlled with git
-- Complete development history preserved in archive/
+- Tagged production releases with detailed changelogs
 - Reproducible R environment with renv.lock
 
 ## 📞 Contact and Support
@@ -213,7 +207,7 @@ For questions about the analysis or to access additional data:
 - **Key Packages**: limma, metafor, tidyverse (all versions locked in renv.lock)
 - **Datasets**: 4 processed, 436 total samples
 - **Analysis Status**: Publication-ready with methodology validation
-- **Repository Size**: Optimized (archived 35+ experimental scripts)
+- **Repository Size**: Optimized (44% smaller: 315M vs 566M)
 
 ---
 
