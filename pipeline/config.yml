@@ -29,6 +29,34 @@ pipeline:
     step_05_report_generator: ["step_04_meta_analysis"]
 
 # ═══════════════════════════════════════════════════════════════
+# ENHANCED DYNAMIC FEATURES (Optional - Non-Disruptive)
+# ═══════════════════════════════════════════════════════════════
+dynamic_features:
+  enabled: false  # Set to true to enable enhanced features
+  auto_download: false  # Automatically download missing datasets
+  dataset_discovery: false  # Search for new relevant datasets
+  pathway_analysis: false  # Add GO/KEGG pathway enrichment
+  gene_family_discovery: false  # Auto-discover gene families
+  literature_mining: false  # PubMed literature integration
+  drug_target_prediction: false  # Pharmaceutical analysis
+  
+  # Search parameters for dataset discovery
+  search_parameters:
+    diseases: ["Heart Failure", "Atrial Fibrillation", "Cardiomyopathy"]
+    species: "Homo sapiens"
+    platforms: ["GPL570", "GPL96", "GPL97"]
+    min_samples: 20
+    max_samples: 1000
+    exclude_cell_lines: true
+    
+  # Pathway analysis settings
+  pathway_settings:
+    databases: ["GO", "KEGG", "Reactome"]
+    fdr_threshold: 0.05
+    min_gene_set_size: 10
+    max_gene_set_size: 500
+
+# ═══════════════════════════════════════════════════════════════
 # DATASET CONFIGURATION (v1.0.0 Compatible)
 # ═══════════════════════════════════════════════════════════════
 datasets:
