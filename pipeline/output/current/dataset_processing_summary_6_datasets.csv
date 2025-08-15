@@ -1,5 +1,0 @@
-"Dataset","Priority_preprocessing","Original_Samples","Processed_Samples","Control_Samples","Disease_Samples","Total_Genes_preprocessing","CAMK_Genes","Group_Detection","QC_Flags","Status_preprocessing","Priority_dge","Samples","Total_Genes_dge","Significant_Genes","CAMK_Genes_Analyzed","CAMK_Significant","Platform","Disease_Type","Biological_Context","Status_dge"
-"GSE115574","MODERATE",59,59,31,28,31383,11,"healthy_vs_disease",0,"SUCCESS","MODERATE",59,31383,199,11,0,"GPL570","Atrial fibrillation","Atrial arrhythmia","SUCCESS"
-"GSE41177","MODERATE",38,38,6,32,31383,11,"healthy_vs_disease",0,"SUCCESS","MODERATE",38,31383,26036,11,11,"GPL570","Atrial fibrillation","Atrial arrhythmia","SUCCESS"
-"GSE57338","HIGH",313,313,136,177,20254,11,"healthy_vs_disease",0,"SUCCESS","HIGH",313,20254,10864,11,6,"GPL570","Heart failure (DCM + Ischemic)","Ventricular heart failure","SUCCESS"
-"GSE79768","MODERATE",26,26,12,14,31383,11,"healthy_vs_disease",0,"SUCCESS","MODERATE",26,31383,4141,11,2,"GPL570","Atrial fibrillation","Atrial arrhythmia","SUCCESS"

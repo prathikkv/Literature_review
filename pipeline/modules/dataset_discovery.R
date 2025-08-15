@@ -89,12 +89,22 @@ discover_geo_datasets <- function(config_file = "config.yml",
   cat("\n🔧 Applying quality filters...\n")
   filtered_datasets <- apply_quality_filters(all_datasets, config)
   
-  # Calculate quality scores
+  # Calculate quality scores and sort safely
   cat("📈 Calculating quality scores...\n")
   scored_datasets <- calculate_quality_scores(filtered_datasets)
   
-  # Sort by quality score
-  final_datasets <- scored_datasets[order(scored_datasets$quality_score, decreasing = TRUE), ]
+  # Sort by quality score with safety check
+  tryCatch({
+    if (nrow(scored_datasets) > 0 && "quality_score" %in% colnames(scored_datasets)) {
+      final_datasets <- scored_datasets[order(scored_datasets$quality_score, decreasing = TRUE), ]
+    } else {
+      final_datasets <- scored_datasets
+      cat("ℹ️  No datasets to sort (empty results)\n")
+    }
+  }, error = function(e) {
+    cat("⚠️  Sorting error:", e$message, "- using unsorted data\n")
+    final_datasets <<- scored_datasets
+  })
   
   # Save to Excel
   save_discovery_results(final_datasets, output_file)

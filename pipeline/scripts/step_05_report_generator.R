@@ -5,6 +5,7 @@
 #' Uses existing RMD template with dynamic data
 
 source("scripts/utilities/step_interface.R")
+source("scripts/utilities/run_management.R")
 library(rmarkdown)
 
 #' Execute Report Generation Step
@@ -38,13 +39,32 @@ step_05_report_generator <- function(step_name, input_data, config, checkpoint_d
     ))
   }
   
-  # Get report configuration
+  # DYNAMIC REPORT NAMING AND ORGANIZATION (STANDARDS COMPLIANT)
+  primary_gene <- config$research_target$primary_gene %||% "UNKNOWN"
+  diseases <- config$research_target$diseases %||% c("Unknown")
+  
+  # Generate run ID and directory structure
+  run_id <- generate_run_id(primary_gene, diseases)
+  run_dirs <- create_run_directory("output", run_id, create_symlink = TRUE)
+  
+  # Create and save run metadata
+  run_metadata <- create_run_metadata(config, run_id)
+  save_run_metadata(run_metadata, run_dirs)
+  
+  # Update config with dynamic paths
+  config <- update_output_paths_in_config(config, run_dirs, primary_gene, diseases)
+  
+  # Get report configuration (now with dynamic paths)
   report_config <- config$paths$reports
   
-  cat("📋 REPORT GENERATION CONFIGURATION:\n")
-  cat("Template:", report_config$template %||% "reports/CAMK_Analysis_Professional_Report.Rmd", "\n")
-  cat("Output HTML:", report_config$output_html %||% "reports/CAMK_Analysis_Professional_Report_DYNAMIC.html", "\n")
-  cat("Baseline HTML:", report_config$baseline_html %||% "reports/CAMK_Analysis_Professional_Report_BASELINE.html", "\n\n")
+  cat("📋 DYNAMIC REPORT GENERATION CONFIGURATION:\n")
+  cat("🎯 Gene:", primary_gene, "\n")
+  cat("🏥 Diseases:", paste(diseases, collapse = ", "), "\n")
+  cat("🆔 Run ID:", run_id, "\n")
+  cat("📁 Output Directory:", run_dirs$current_run, "\n")
+  cat("📄 Template:", report_config$template %||% "templates/CAMK_Analysis_Report.Rmd", "\n")
+  cat("📊 Report File:", report_config$output_html, "\n")
+  cat("🔗 Current Symlink:", run_dirs$current_symlink, "\n\n")
   
   # Verify required files exist
   template_file <- report_config$template %||% "reports/CAMK_Analysis_Professional_Report.Rmd"

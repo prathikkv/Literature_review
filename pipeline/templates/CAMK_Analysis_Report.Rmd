@@ -1,5 +1,5 @@
 ---
-title: "`r paste(config$research_target$primary_gene, 'Gene Family in', paste(config$research_target$diseases, collapse = ' and '))`"
+title: "Dynamic Pharmaceutical Research Report"
 subtitle: "Comprehensive Meta-Analysis Across Multiple Datasets"
 author: "Bioinformatics Research Team"
 date: "`r Sys.Date()`"
@@ -132,9 +132,18 @@ if (is.null(analysis_data)) {
 primary_gene_meta <- analysis_data$meta_results[analysis_data$meta_results$Gene == primary_gene, ]
 ```
 
+```{r dynamic-title, results='asis'}
+# DYNAMIC TITLE GENERATION (FIXED CONFIG INTEGRATION)
+dynamic_title <- paste(primary_gene, "Gene Family in", paste(target_diseases, collapse = " and "))
+cat("# ", dynamic_title, "\n\n", sep = "")
+cat("**Comprehensive Meta-Analysis Report**\n\n")
+cat("*Generated on ", format(Sys.Date(), "%B %d, %Y"), "*\n\n", sep = "")
+cat("---\n\n")
+```
+
 ```{r dynamic-intro, results='asis'}
 # DYNAMIC INTRODUCTION (PROMPT 6)
-cat("# Analysis Overview\n\n")
+cat("## Analysis Overview\n\n")
 cat("This comprehensive analysis focuses on **", primary_gene, "** gene family in the context of ", 
     paste(target_diseases, collapse = " and "), ".\n\n", sep = "")
 
@@ -167,15 +176,50 @@ cat("- Meta-analysis method: ", analysis_params$meta_analysis_method, "\n\n")
 
 ## Key Findings
 
-<div class="alert alert-success">
-**CAMK2D CONFIRMED AS THERAPEUTIC TARGET**
+```{r dynamic-executive-summary, results='asis'}
+# DYNAMIC EXECUTIVE SUMMARY
+cat("<div class='alert alert-success'>\n")
+cat("**🎯 PRIMARY FINDING:** ", primary_gene, " shows significant differential expression in ", 
+    paste(target_diseases, collapse = " and "), " studies.\n\n", sep = "")
 
-Our comprehensive meta-analysis across **`r analysis_data$metrics$total_datasets` datasets** (`r analysis_data$metrics$total_samples` samples) confirms CAMK2D as significantly upregulated in cardiovascular disease with strong therapeutic potential.
-</div>
+if (nrow(primary_gene_meta) > 0) {
+  cat("**📊 STATISTICAL RESULTS:**\n")
+  cat("- Combined Effect Size (logFC): ", round(primary_gene_meta$Combined_logFC[1], 4), "\n")
+  cat("- Meta-analysis P-value: ", format(primary_gene_meta$Combined_P_Value[1], scientific = TRUE), "\n")
+  cat("- Statistical Significance: ", ifelse(primary_gene_meta$Significant[1], "✅ YES", "❌ NO"), "\n\n")
+} else {
+  cat("⚠️ No meta-analysis results found for ", primary_gene, "\n\n")
+}
+
+cat("**🔬 ANALYSIS SCOPE:**\n")
+cat("- Primary Gene: **", primary_gene, "**\n")
+cat("- Disease Context: ", paste(target_diseases, collapse = ", "), "\n")
+if (length(gene_family) > 1) {
+  cat("- Gene Family Size: ", length(gene_family), " members\n")
+}
+cat("</div>\n\n")
+```
+
+```{r dynamic-target-confirmation, results='asis'}
+# DYNAMIC TARGET CONFIRMATION
+cat("<div class='alert alert-success'>\n")
+cat("**", toupper(primary_gene), " THERAPEUTIC TARGET ASSESSMENT**\n\n", sep = "")
+cat("Our comprehensive meta-analysis across **", analysis_data$metrics$total_datasets, 
+    " datasets** (", analysis_data$metrics$total_samples, " samples) ", sep = "")
+
+if (nrow(primary_gene_meta) > 0 && primary_gene_meta$Significant[1]) {
+  cat("confirms ", primary_gene, " as significantly dysregulated in ", 
+      paste(target_diseases, collapse = " and "), " with strong therapeutic potential.", sep = "")
+} else {
+  cat("provides comprehensive analysis of ", primary_gene, " expression patterns in ", 
+      paste(target_diseases, collapse = " and "), ".", sep = "")
+}
+cat("\n</div>\n\n")
+```
 
 ```{r executive-summary}
-# Create executive summary table
-if (nrow(camk2d_meta) > 0) {
+# Create executive summary table (DYNAMIC)
+if (nrow(primary_gene_meta) > 0) {
   executive_summary <- data.frame(
     Metric = c(
       "Primary Finding",
@@ -188,10 +232,10 @@ if (nrow(camk2d_meta) > 0) {
       "Publication Readiness"
     ),
     Result = c(
-      "CAMK2D Significantly Upregulated",
-      paste0("p = ", sprintf("%.2e", camk2d_meta$Combined_P_Value)),
-      sprintf("%.4f", camk2d_meta$Combined_logFC),
-      paste0("[", sprintf("%.4f", camk2d_meta$CI_Lower), " to ", sprintf("%.4f", camk2d_meta$CI_Upper), "]"),
+      paste(primary_gene, if(primary_gene_meta$Significant[1]) "Significantly Dysregulated" else "Expression Analyzed"),
+      paste0("p = ", sprintf("%.2e", primary_gene_meta$Combined_P_Value)),
+      sprintf("%.4f", primary_gene_meta$Combined_logFC),
+      paste0("[", sprintf("%.4f", primary_gene_meta$CI_Lower), " to ", sprintf("%.4f", primary_gene_meta$CI_Upper), "]"),
       "100% (4/4 datasets show upregulation)",
       "Perfect match with published literature",
       "HIGH - Priority drug target",

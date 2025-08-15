@@ -1,0 +1,24 @@
+"gene","sources","source_count","evidence_score","evidence_level","primary_gene","discovery_date"
+"CAMK2G","ncbi,go,biomart",3,7.92,"Very High","CAMK2D",2025-08-16
+"CAMK4","ncbi,go",2,4.62,"High","CAMK2D",2025-08-16
+"CAMK1G","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"CAMK1D","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"CAMK1","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"CAMK2A","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"CAMK2B","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"CAMKV","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"CAMKK2","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"CAMKK1","go,biomart",2,4.62,"High","CAMK2D",2025-08-16
+"MYLK2","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"PSKH2","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"PHKG2","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"DCLK1","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"PNCK","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"DCLK2","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"PSKH1","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"MYLK4","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"MYLK3","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"STK33","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"PHKG1","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"STK11","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16
+"DCLK3","go,biomart",2,3.85,"Moderate","CAMK2D",2025-08-16

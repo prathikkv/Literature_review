@@ -22,8 +22,33 @@ suppressPackageStartupMessages({
   library(tidyverse)
 })
 
+# Load pipeline utilities
+source("scripts/utilities/error_handling.R")
+source("scripts/utilities/input_validation.R")
+source("scripts/utilities/run_management.R")
+
 # Set working directory to pipeline folder
 cat("📁 Working directory:", getwd(), "\n\n")
+
+# Initialize error handling and logging system
+tryCatch({
+  run_id <- generate_run_id("PIPELINE", c("ENHANCED"))
+  log_config <- initialize_logging_system(config = NULL, run_id = run_id)
+  
+  log_message(
+    message = "Enhanced pipeline execution started",
+    level = "INFO",
+    category = "PIPELINE",
+    details = list(working_dir = getwd(), run_id = run_id),
+    log_config = log_config
+  )
+  
+  cat("🔧 Logging system initialized (Run ID:", run_id, ")\n\n")
+  
+}, error = function(e) {
+  cat("⚠️  Warning: Could not initialize logging system:", e$message, "\n")
+  log_config <- NULL
+})
 
 # Parse command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -57,14 +82,78 @@ if (show_help) {
 cat("⚙️  STEP 1: Configuration and Feature Detection\n")
 cat("═══════════════════════════════════════════════════════════════\n")
 
-# Load configuration
+# Load and validate configuration
 config_file <- "config.yml"
 if (!file.exists(config_file)) {
-  stop("❌ Configuration file not found: ", config_file)
+  error_msg <- paste("Configuration file not found:", config_file)
+  if (exists("log_config") && !is.null(log_config)) {
+    handle_pipeline_error(
+      error = simpleError(error_msg),
+      context = list(expected_file = config_file, working_dir = getwd()),
+      step_name = "configuration_loading",
+      recovery_action = "Ensure config.yml exists in pipeline directory",
+      log_config = log_config
+    )
+  }
+  stop("❌ ", error_msg)
 }
 
 config <- yaml::read_yaml(config_file)
 cat("✅ Configuration loaded successfully\n")
+
+# Validate configuration for security and biological validity
+if (exists("log_config") && !is.null(log_config)) {
+  log_message(
+    message = "Validating pipeline configuration",
+    level = "INFO",
+    category = "SECURITY",
+    log_config = log_config
+  )
+}
+
+config_validation <- validate_configuration(config)
+if (!config_validation$valid) {
+  error_msg <- paste("Configuration validation failed:", paste(config_validation$errors, collapse = "; "))
+  if (exists("log_config") && !is.null(log_config)) {
+    handle_pipeline_error(
+      error = simpleError(error_msg),
+      context = list(
+        validation_errors = config_validation$errors,
+        security_issues = config_validation$security_issues,
+        config_file = config_file
+      ),
+      step_name = "configuration_validation",
+      recovery_action = "Fix configuration issues and retry",
+      log_config = log_config
+    )
+  }
+  stop("❌ ", error_msg)
+}
+
+if (length(config_validation$warnings) > 0) {
+  cat("⚠️  Configuration warnings:\n")
+  for (warning in config_validation$warnings) {
+    cat("   -", warning, "\n")
+  }
+}
+
+if (length(config_validation$security_issues) > 0) {
+  if (exists("log_config") && !is.null(log_config)) {
+    log_message(
+      message = "Security issues detected in configuration",
+      level = "WARNING",
+      category = "SECURITY",
+      details = list(issues = config_validation$security_issues),
+      log_config = log_config
+    )
+  }
+  cat("🔒 Security warnings:\n")
+  for (issue in config_validation$security_issues) {
+    cat("   -", issue, "\n")
+  }
+}
+
+cat("✅ Configuration validation completed\n")
 
 # Check for enhanced features and auto-enable for non-CAMK2D genes
 enhanced_features <- config$dynamic_features %||% list(enabled = FALSE)

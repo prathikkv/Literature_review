@@ -1,393 +1,323 @@
-# CAMK2D Self-Contained Pipeline Configuration
-# ============================================
-# Complete configuration for reproducible CAMK2D cardiovascular analysis
-# This config produces identical results to v1.0.0 production tag
-
-# ═══════════════════════════════════════════════════════════════
-# PIPELINE METADATA
-# ═══════════════════════════════════════════════════════════════
 pipeline:
-  name: "CAMK2D Self-Contained Analysis Pipeline"
-  version: "1.0.0-selfcontained"
-  description: "Reproduces v1.0.0 production results in self-contained environment"
-  execution_mode: "dynamic"
-  
-  # Execution steps in order
+  name: CAMK2D Self-Contained Analysis Pipeline
+  version: 1.0.0-selfcontained
+  description: Reproduces v1.0.0 production results in self-contained environment
+  execution_mode: dynamic
   steps:
-    - step_01_data_loader
-    - step_02_preprocessing  
-    - step_03_dge_analysis
-    - step_04_meta_analysis
-    - step_05_report_generator
-  
-  # Step dependencies for validation
+  - step_01_data_loader
+  - step_02_preprocessing
+  - step_03_dge_analysis
+  - step_04_meta_analysis
+  - step_05_report_generator
   dependencies:
     step_01_data_loader: []
-    step_02_preprocessing: ["step_01_data_loader"]
-    step_03_dge_analysis: ["step_02_preprocessing"]
-    step_04_meta_analysis: ["step_03_dge_analysis"]
-    step_05_report_generator: ["step_04_meta_analysis"]
-
-# ═══════════════════════════════════════════════════════════════
-# DYNAMIC RESEARCH CONFIGURATION (PROMPT 2)
-# ═══════════════════════════════════════════════════════════════
+    step_02_preprocessing: step_01_data_loader
+    step_03_dge_analysis: step_02_preprocessing
+    step_04_meta_analysis: step_03_dge_analysis
+    step_05_report_generator: step_04_meta_analysis
 research_target:
-  primary_gene: "TP53"  # Main gene of interest - changed for testing dynamic capabilities
-  gene_family: []  # Auto-populated by gene family discovery
-  diseases: ["Lung Cancer", "Breast Cancer"]  # Diseases to study - changed for testing
-  auto_populate_family: true  # Whether to auto-discover gene family members
-
-# ═══════════════════════════════════════════════════════════════
-# ANALYSIS PARAMETERS (PROMPT 2)
-# ═══════════════════════════════════════════════════════════════
+  primary_gene: CAMK2D
+  gene_family: []
+  diseases:
+  - Heart Failure
+  - Atrial Fibrillation
+  auto_populate_family: yes
 analysis_parameters:
   p_value_threshold: 0.05
   log_fc_threshold: 0.1
   min_sample_size: 20
-  fdr_correction: "BH"  # Benjamini-Hochberg
-  meta_analysis_method: "fixed"  # or "random"
-
-# ═══════════════════════════════════════════════════════════════
-# OUTPUT SETTINGS (PROMPT 2)
-# ═══════════════════════════════════════════════════════════════
+  fdr_correction: BH
+  meta_analysis_method: fixed
 output_settings:
-  include_pathways: true
-  include_drug_targets: true
-  include_clinical_trials: true
-  include_literature_mining: true
-  include_gene_family_analysis: true
-  generate_excel_reports: true
-  generate_visualizations: true
-  
-# ═══════════════════════════════════════════════════════════════
-# ENHANCED DYNAMIC FEATURES (Optional - Non-Disruptive)
-# ═══════════════════════════════════════════════════════════════
+  include_pathways: yes
+  include_drug_targets: yes
+  include_clinical_trials: yes
+  include_literature_mining: yes
+  include_gene_family_analysis: yes
+  generate_excel_reports: yes
+  generate_visualizations: yes
 dynamic_features:
-  enabled: false  # Set to true to enable enhanced features
-  auto_download: false  # Automatically download missing datasets
-  dataset_discovery: false  # Search for new relevant datasets
-  pathway_analysis: false  # Add GO/KEGG pathway enrichment
-  gene_family_discovery: false  # Auto-discover gene families
-  literature_mining: false  # PubMed literature integration
-  drug_target_prediction: false  # Pharmaceutical analysis
-  
-  # Search parameters for dataset discovery (uses research_target diseases by default)
+  enabled: yes
+  auto_download: yes
+  dataset_discovery: yes
+  pathway_analysis: yes
+  gene_family_discovery: yes
+  literature_mining: yes
+  drug_target_prediction: yes
   search_parameters:
-    diseases: []  # If empty, uses research_target.diseases
-    species: "Homo sapiens"
-    platforms: ["GPL570", "GPL96", "GPL97"]
+    diseases: []
+    species: Homo sapiens
+    platforms:
+    - GPL570
+    - GPL96
+    - GPL97
     min_samples: 20
     max_samples: 1000
-    exclude_cell_lines: true
-    
-  # Pathway analysis settings
+    exclude_cell_lines: yes
   pathway_settings:
-    databases: ["GO", "KEGG", "Reactome"]
+    databases:
+    - GO
+    - KEGG
+    - Reactome
     fdr_threshold: 0.05
     min_gene_set_size: 10
     max_gene_set_size: 500
-
-# ═══════════════════════════════════════════════════════════════
-# DATASET CONFIGURATION (v1.0.0 Compatible)
-# ═══════════════════════════════════════════════════════════════
 datasets:
-  # Exact dataset configuration that produced v1.0.0 results
   active_datasets:
     GSE57338:
-      description: "Heart failure (DCM + Ischemic) vs non-failing hearts"
-      disease_type: "Heart failure (DCM + Ischemic)"
-      control_type: "Non-failing hearts"
-      biological_context: "Ventricular heart failure"
-      priority: "HIGH"
+      description: Heart failure (DCM + Ischemic) vs non-failing hearts
+      disease_type: Heart failure (DCM + Ischemic)
+      control_type: Non-failing hearts
+      biological_context: Ventricular heart failure
+      priority: HIGH
       expected_samples: 313
-      inclusion_reason: "Large sample size, clear disease vs healthy comparison"
-      platform: "GPL570"
-      cache_location: "cache/comprehensive/GSE57338_processed.rds"
-      fallback_location: "cache/microarray/GSE57338_processed.rds"
-      
+      inclusion_reason: Large sample size, clear disease vs healthy comparison
+      platform: GPL570
+      cache_location: cache/comprehensive/GSE57338_processed.rds
+      fallback_location: cache/microarray/GSE57338_processed.rds
     GSE41177:
-      description: "Atrial fibrillation vs sinus rhythm"
-      disease_type: "Atrial fibrillation"
-      control_type: "Sinus rhythm"
-      biological_context: "Atrial arrhythmia"
-      priority: "MODERATE"
+      description: Atrial fibrillation vs sinus rhythm
+      disease_type: Atrial fibrillation
+      control_type: Sinus rhythm
+      biological_context: Atrial arrhythmia
+      priority: MODERATE
       expected_samples: 38
-      inclusion_reason: "AF vs SR comparison, moderate sample size"
-      platform: "GPL570"
-      cache_location: "cache/microarray/GSE41177_processed.rds"
-      
+      inclusion_reason: AF vs SR comparison, moderate sample size
+      platform: GPL570
+      cache_location: cache/microarray/GSE41177_processed.rds
     GSE79768:
-      description: "Atrial fibrillation vs sinus rhythm"
-      disease_type: "Atrial fibrillation"
-      control_type: "Sinus rhythm"
-      biological_context: "Atrial arrhythmia"
-      priority: "MODERATE"
+      description: Atrial fibrillation vs sinus rhythm
+      disease_type: Atrial fibrillation
+      control_type: Sinus rhythm
+      biological_context: Atrial arrhythmia
+      priority: MODERATE
       expected_samples: 26
-      inclusion_reason: "AF vs SR comparison, supports GSE41177 findings"
-      platform: "GPL570"
-      cache_location: "cache/microarray/GSE79768_processed.rds"
-      
+      inclusion_reason: AF vs SR comparison, supports GSE41177 findings
+      platform: GPL570
+      cache_location: cache/microarray/GSE79768_processed.rds
     GSE115574:
-      description: "Atrial fibrillation vs sinus rhythm"
-      disease_type: "Atrial fibrillation"
-      control_type: "Sinus rhythm"
-      biological_context: "Atrial arrhythmia"
-      priority: "MODERATE"
+      description: Atrial fibrillation vs sinus rhythm
+      disease_type: Atrial fibrillation
+      control_type: Sinus rhythm
+      biological_context: Atrial arrhythmia
+      priority: MODERATE
       expected_samples: 59
-      inclusion_reason: "Largest AF dataset, good statistical power"
-      platform: "GPL570"
-      cache_location: "cache/microarray/GSE115574_processed.rds"
-      
-    # Optional datasets (skip if not found)
+      inclusion_reason: Largest AF dataset, good statistical power
+      platform: GPL570
+      cache_location: cache/microarray/GSE115574_processed.rds
     GSE31821:
-      description: "Atrial fibrillation vs sinus rhythm"
-      disease_type: "Atrial fibrillation"
-      control_type: "Sinus rhythm"
-      biological_context: "Atrial arrhythmia"
-      priority: "LOW"
+      description: Atrial fibrillation vs sinus rhythm
+      disease_type: Atrial fibrillation
+      control_type: Sinus rhythm
+      biological_context: Atrial arrhythmia
+      priority: LOW
       expected_samples: 6
-      inclusion_reason: "Small but supports AF pattern, literature validation"
-      platform: "GPL570"
-      cache_location: "cache/microarray/GSE31821_processed.rds"
-      status: "optional"
-      
+      inclusion_reason: Small but supports AF pattern, literature validation
+      platform: GPL570
+      cache_location: cache/microarray/GSE31821_processed.rds
+      status: optional
     GSE14975:
-      description: "Heart failure vs healthy"
-      disease_type: "Heart failure"
-      control_type: "Healthy controls"
-      biological_context: "Heart failure"
-      priority: "LOW"
+      description: Heart failure vs healthy
+      disease_type: Heart failure
+      control_type: Healthy controls
+      biological_context: Heart failure
+      priority: LOW
       expected_samples: 10
-      inclusion_reason: "Small but supports heart failure pattern"
-      platform: "GPL570"
-      cache_location: "cache/microarray/GSE14975_processed.rds"
-      status: "optional"
-
-# ═══════════════════════════════════════════════════════════════
-# GENE DEFINITIONS (v1.0.0 Compatible)
-# ═══════════════════════════════════════════════════════════════
+      inclusion_reason: Small but supports heart failure pattern
+      platform: GPL570
+      cache_location: cache/microarray/GSE14975_processed.rds
+      status: optional
 genes:
-  # CAMK family genes exactly as used in v1.0.0
   camk_core_genes:
-    - "CAMK2D"  # Primary focus gene
-    - "CAMK2A"
-    - "CAMK2B"
-    - "CAMK2G"
-    - "CAMKK1"
-    - "CAMKK2"
-    - "CAMK1"
-    - "CAMK1D"
-    - "CAMK1G"
-    - "CAMK4"
-    - "CAMKV"
-  
-  # Gene validation thresholds
+  - CAMK2D
+  - CAMK2A
+  - CAMK2B
+  - CAMK2G
+  - CAMKK1
+  - CAMKK2
+  - CAMK1
+  - CAMK1D
+  - CAMK1G
+  - CAMK4
+  - CAMKV
   validation:
-    require_primary_gene: "CAMK2D"
+    require_primary_gene: CAMK2D
     min_genes_detected: 5
-  
-  # Priority-specific minimum gene requirements
   minimum_genes:
     HIGH: 8
     MODERATE: 5
     LOW: 3
-
-# ═══════════════════════════════════════════════════════════════
-# ANALYSIS PARAMETERS (v1.0.0 Compatible)
-# ═══════════════════════════════════════════════════════════════
 analysis:
-  # Differential expression settings (exact match to v1.0.0)
   differential_expression:
-    method: "limma"
-    adjust_method: "BH"
+    method: limma
+    adjust_method: BH
     fdr_threshold: 0.05
-    design_formula: "~ groups_vector"
-    contrast_interpretation: "Disease_vs_Control"
-    
-  # Quality control thresholds (v1.0.0 values)
+    design_formula: ~ groups_vector
+    contrast_interpretation: Disease_vs_Control
   quality_control:
     high_logfc_threshold: 0.8
     low_effect_threshold: 0.01
     min_samples_per_group: 3
     max_sample_imbalance_ratio: 10
-    
-  # Meta-analysis settings (exact v1.0.0 configuration)
   meta_analysis:
-    method: "fixed_effects"
-    package: "metafor"
+    method: fixed_effects
+    package: metafor
     min_datasets: 2
     quality_filters:
       max_absolute_logfc: 0.8
     heterogeneity:
-      calculate_i2: true
-      report_q_test: true
+      calculate_i2: yes
+      report_q_test: yes
     significance_threshold: 0.05
-    
-  # Group detection configuration
   group_detection:
     priority_columns:
-      - "source_name_ch1"
-      - "title"
-      - "description"
-      - "disease status:ch1"
-      - "heart failure:ch1"
-      - "characteristics_ch1"
-    
+    - source_name_ch1
+    - title
+    - description
+    - disease status:ch1
+    - heart failure:ch1
+    - characteristics_ch1
     control_patterns:
-      - "control"
-      - "normal"
-      - "non-failing"
-      - "healthy"
-      - "donor"
-      - "sinus rhythm"
-      - "SR"
-      - "wild type"
-      - "WT"
-    
+    - control
+    - normal
+    - non-failing
+    - healthy
+    - donor
+    - sinus rhythm
+    - SR
+    - wild type
+    - WT
     disease_patterns:
-      - "cardiomyopathy"
-      - "CMP"
-      - "heart failure"
-      - "HF"
-      - "ischemic"
-      - "MI"
-      - "infarct"
-      - "pathological"
-      - "atrial fibrillation"
-      - "AF"
-      - "dilated"
-      - "hypertrophic"
-      - "disease"
-    
+    - cardiomyopathy
+    - CMP
+    - heart failure
+    - HF
+    - ischemic
+    - MI
+    - infarct
+    - pathological
+    - atrial fibrillation
+    - AF
+    - dilated
+    - hypertrophic
+    - disease
     validation:
       min_control_samples: 3
       min_disease_samples: 3
       max_overlap_samples: 0
       max_unclassified_percent: 0.2
-
-# ═══════════════════════════════════════════════════════════════
-# FILE PATHS AND I/O
-# ═══════════════════════════════════════════════════════════════
 paths:
-  # Input directories (relative to pipeline folder)
-  cache_root: "cache"
-  data_root: "data"
-  
-  # Output structure
+  cache_root: cache
+  data_root: data
   output:
-    root: "output"
-    current: "output/current"
-    checkpoints: "output/checkpoints"
-    logs: "output/logs"
-    
-  # Output files (v1.0.0 compatible names)
+    root: output
+    current: output/current
+    checkpoints: output/checkpoints
+    logs: output/logs
   output_files:
-    dge_results: "output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv"
-    meta_results: "output/current/CAMK_meta_analysis_FINAL.csv"
-    dataset_summary: "output/current/dataset_processing_summary_6_datasets.csv"
-  
-  # Report generation
+    dge_results: output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv
+    meta_results: output/current/CAMK_meta_analysis_FINAL.csv
+    dataset_summary: output/current/dataset_processing_summary_6_datasets.csv
   reports:
-    template: "templates/CAMK_Analysis_Report.Rmd"
-    output_html: "output/current/CAMK_Analysis_Report.html"
-
-# ═══════════════════════════════════════════════════════════════
-# EXECUTION CONTROL
-# ═══════════════════════════════════════════════════════════════
+    template: templates/CAMK_Analysis_Report.Rmd
+    output_html: output/current/CAMK_Analysis_Report.html
 execution:
-  # Checkpoint management
   checkpoints:
-    enabled: true
-    auto_save: true
-    auto_resume: true
-    compression: true
-    
-  # Error handling
+    enabled: yes
+    auto_save: yes
+    auto_resume: yes
+    compression: yes
   error_handling:
-    continue_on_dataset_failure: true
+    continue_on_dataset_failure: yes
     max_retries: 3
     retry_delay_seconds: 5
-    fail_fast: false
-    
-  # Logging
+    fail_fast: no
   logging:
-    level: "INFO"
-    file: "output/logs/pipeline_execution.log"
-    console_output: true
-    include_performance_metrics: true
-
-# ═══════════════════════════════════════════════════════════════
-# VALIDATION AGAINST v1.0.0 BASELINE
-# ═══════════════════════════════════════════════════════════════
+    level: INFO
+    file: output/logs/pipeline_execution.log
+    console_output: yes
+    include_performance_metrics: yes
 validation:
-  # Expected results from v1.0.0 production tag
   baseline_comparison:
-    enabled: true
+    enabled: yes
     baseline_results:
       camk2d_combined_logfc: 0.0552
-      camk2d_p_value: 1.52e-02
+      camk2d_p_value: 0.0152
       total_datasets_success: 4
       total_samples: 436
       significant_genes: 8
-      
-  # Numerical tolerances for validation
   tolerances:
     logfc_tolerance: 1e-4
     p_value_tolerance: 1e-6
     sample_count_tolerance: 0
-    
-  # Success criteria
   success_criteria:
     min_datasets_processed: 4
-    camk2d_must_be_significant: true
-    all_core_genes_detected: true
-    report_generation_success: true
-
-# ═══════════════════════════════════════════════════════════════
-# REQUIRED PACKAGES
-# ═══════════════════════════════════════════════════════════════
+    camk2d_must_be_significant: yes
+    all_core_genes_detected: yes
+    report_generation_success: yes
 packages:
-  # Core analysis packages
   required:
-    - "limma"
-    - "metafor"
-    - "tidyverse"
-    - "yaml"
-    - "rmarkdown"
-    - "knitr"
-    
-  # Visualization packages
+  - limma
+  - metafor
+  - tidyverse
+  - yaml
+  - rmarkdown
+  - knitr
   visualization:
-    - "ggplot2"
-    - "plotly"
-    - "DT"
-    - "kableExtra"
-    - "ggrepel"
-    - "gridExtra"
-    - "htmltools"
-    
-  # Optional packages
+  - ggplot2
+  - plotly
+  - DT
+  - kableExtra
+  - ggrepel
+  - gridExtra
+  - htmltools
   optional:
-    - "BiocParallel"
-    - "future"
-
-# ═══════════════════════════════════════════════════════════════
-# METADATA
-# ═══════════════════════════════════════════════════════════════
+  - BiocParallel
+  - future
 metadata:
-  created_date: "2025-08-15"
-  created_by: "Claude Code - Self-Contained Pipeline Generator"
+  created_date: '2025-08-15'
+  created_by: Claude Code - Self-Contained Pipeline Generator
   version_history:
-    - "1.0.0: Production baseline (v1.0.0 tag)"
-    - "1.0.0-selfcontained: Self-contained reproducible pipeline"
-  
+  - '1.0.0: Production baseline (v1.0.0 tag)'
+  - '1.0.0-selfcontained: Self-contained reproducible pipeline'
   compatibility:
-    baseline_tag: "v1.0.0"
-    r_version_min: "4.0.0"
-    tested_platforms: ["macOS", "Linux", "Windows"]
-    
+    baseline_tag: v1.0.0
+    r_version_min: 4.0.0
+    tested_platforms:
+    - macOS
+    - Linux
+    - Windows
   scientific_context:
-    focus_gene: "CAMK2D"
-    disease_focus: "Cardiovascular disease (heart failure, atrial fibrillation)"
-    analysis_type: "Meta-analysis of differential gene expression"
-    therapeutic_significance: "CAMK2D validated as therapeutic target"
+    focus_gene: CAMK2D
+    disease_focus: Cardiovascular disease (heart failure, atrial fibrillation)
+    analysis_type: Meta-analysis of differential gene expression
+    therapeutic_significance: CAMK2D validated as therapeutic target
+gene_analysis:
+  primary_gene: CAMK2D
+  gene_family:
+  - CAMK2D
+  - CAMK2G
+  - CAMK4
+  - CAMK1G
+  - CAMK1D
+  - CAMK1
+  - CAMK2A
+  - CAMK2B
+  - CAMKV
+  - CAMKK2
+  - CAMKK1
+  - MYLK2
+  - PSKH2
+  - PHKG2
+  - DCLK1
+  - PNCK
+  - DCLK2
+  - PSKH1
+  - MYLK4
+  - MYLK3
+  - STK33
+  - PHKG1
+  - STK11
+  - DCLK3
+  family_discovery_date: '2025-08-16'
+  family_size: 24
