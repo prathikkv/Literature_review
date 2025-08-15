@@ -368,6 +368,49 @@ if (!enhanced_only) {
 }
 
 # ═══════════════════════════════════════════════════════════════
+# INTERACTIVE DOCUMENTATION GENERATION
+# ═══════════════════════════════════════════════════════════════
+
+if (!enhanced_only) {
+  cat("\n🌐 STEP 4: Interactive Documentation Generation\n")
+  cat("═══════════════════════════════════════════════════════════════\n")
+  
+  # Check if interactive documentation is enabled
+  doc_config <- config$paths$reports$interactive_documentation
+  if (!is.null(doc_config) && doc_config$enabled) {
+    cat("Generating interactive technical documentation...\n\n")
+    
+    # Load documentation generation functions
+    tryCatch({
+      source("generate_interactive_documentation.R")
+      
+      # Generate interactive documentation using config settings
+      doc_result <- generate_interactive_documentation(
+        input_file = doc_config$input_markdown,
+        output_file = doc_config$output_html,
+        title = doc_config$title
+      )
+      
+      if (doc_result) {
+        cat("✅ Interactive documentation generated successfully\n")
+        cat("📄 Documentation saved to:", doc_config$output_html, "\n")
+      } else {
+        cat("⚠️  Documentation generation encountered issues\n")
+      }
+      
+    }, error = function(e) {
+      cat("❌ Documentation generation failed:", e$message, "\n")
+      cat("   Continuing with pipeline completion...\n")
+    })
+  } else {
+    cat("ℹ️  Interactive documentation disabled in configuration\n")
+  }
+  
+} else {
+  cat("\n⏭️  STEP 4: Skipping documentation generation (enhanced-only mode)\n")
+}
+
+# ═══════════════════════════════════════════════════════════════
 # INTEGRATION SUMMARY
 # ═══════════════════════════════════════════════════════════════
 
@@ -410,17 +453,44 @@ if (!enhanced_only) {
 
 # Output locations
 cat("\n📁 Output Locations:\n")
-cat("   📊 Standard results: output/current/\n")
+analysis_report_path <- config$paths$reports$analysis_report$output_html %||% "output/current/CAMK_Analysis_Report.html"
+doc_report_path <- config$paths$reports$interactive_documentation$output_html %||% "output/current/Interactive_Technical_Documentation.html"
+cat("   📊 Analysis report:", analysis_report_path, "\n")
+cat("   🌐 Interactive docs:", doc_report_path, "\n")
+cat("   📈 Standard results: output/current/ (CSV files)\n")
 cat("   🔍 Discovery results: output/discovered_datasets.xlsx\n")
 cat("   🧬 Pathway results: output/pathways/\n")
 cat("   📋 Logs: output/logs/\n")
 
 # Next steps
 cat("\n🎯 Next Steps:\n")
-cat("   1. Review enhanced analysis results in output/ directories\n")
-cat("   2. Compare with baseline v1.0.0 results for validation\n")
-cat("   3. Enable/disable specific features in config.yml as needed\n")
-cat("   4. Use discovered datasets to expand analysis scope\n")
+cat("   1. Open", analysis_report_path, "for analysis results\n")
+cat("   2. View", doc_report_path, "for flowcharts\n")
+cat("   3. Compare with baseline v1.0.0 results for validation\n")
+cat("   4. Enable/disable specific features in config.yml as needed\n")
+cat("   5. Use discovered datasets to expand analysis scope\n")
+
+# Final execution summary
+cat("\n📋 EXECUTION SUMMARY:\n")
+if (file.exists(analysis_report_path)) {
+  cat("   📊 Analysis Report: ✅ Generated\n")
+} else {
+  cat("   📊 Analysis Report: ❌ Not Found\n")
+}
+
+if (file.exists(doc_report_path)) {
+  cat("   🌐 Interactive Documentation: ✅ Generated\n")
+} else {
+  cat("   🌐 Interactive Documentation: ❌ Not Found\n")
+}
+
+# Check for analysis result files
+meta_file <- "output/current/CAMK_meta_analysis_FINAL.csv"
+if (file.exists(meta_file)) {
+  cat("   📈 Meta-Analysis Results: ✅ Available\n")
+} else {
+  cat("   📈 Meta-Analysis Results: ⚠️  Pending\n")
+}
 
 cat("\n")
 cat("═══════════════════════════════════════════════════════════════\n")
@@ -428,5 +498,6 @@ cat("✅ ENHANCED PIPELINE EXECUTION COMPLETE\n")
 cat("   Backwards compatibility: ✅ Maintained\n")
 cat("   Original results: ✅ Preserved\n")
 cat("   New capabilities: ✅ Available when enabled\n")
+cat("   Integrated reports: ✅ Cross-linked navigation\n")
 cat("═══════════════════════════════════════════════════════════════\n")
 cat("\n")

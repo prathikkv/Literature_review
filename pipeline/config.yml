@@ -219,8 +219,17 @@ paths:
     meta_results: output/current/CAMK_meta_analysis_FINAL.csv
     dataset_summary: output/current/dataset_processing_summary_6_datasets.csv
   reports:
-    template: templates/CAMK_Analysis_Report.Rmd
-    output_html: output/current/CAMK_Analysis_Report.html
+    analysis_report:
+      template: templates/CAMK_Analysis_Report.Rmd
+      output_html: output/current/CAMK_Analysis_Report.html
+      enabled: yes
+    interactive_documentation:
+      input_markdown: Technical_Documentation_CAMK2D_Pipeline.md
+      output_html: output/current/Interactive_Technical_Documentation.html
+      title: CAMK2D Pipeline - Interactive Technical Documentation
+      enabled: yes
+      mermaid_theme: default
+      include_downloads: yes
 execution:
   checkpoints:
     enabled: yes

@@ -25,7 +25,8 @@ suppressPackageStartupMessages({
 generate_interactive_documentation <- function(
   input_file = "Technical_Documentation_CAMK2D_Pipeline.md",
   output_file = "Interactive_Technical_Documentation.html",
-  title = "CAMK2D Pipeline - Interactive Technical Documentation"
+  title = "CAMK2D Pipeline - Interactive Technical Documentation",
+  include_results_summary = TRUE
 ) {
   
   cat("\n")
@@ -66,6 +67,13 @@ generate_interactive_documentation <- function(
   
   # Create enhanced markdown content with HTML integration
   enhanced_content <- process_markdown_for_html(markdown_content, title)
+  
+  # Add analysis results summary if requested
+  if (include_results_summary) {
+    cat("📊 Adding analysis results summary...\n")
+    results_summary <- generate_results_summary()
+    enhanced_content <- c(enhanced_content[1:10], results_summary, enhanced_content[11:length(enhanced_content)])
+  }
   
   cat("✅ Content processing complete\n\n")
   
@@ -213,9 +221,14 @@ create_interactive_html <- function(content, title) {
     '\n            <a class="navbar-brand" href="#top">',
     '\n                <strong>🧬 CAMK2D Pipeline Documentation</strong>',
     '\n            </a>',
-    '\n            <button class="btn btn-outline-light btn-sm" onclick="toggleTOC()">',
-    '\n                📋 Table of Contents',
-    '\n            </button>',
+    '\n            <div class="navbar-nav ms-auto">',
+    '\n                <a class="btn btn-outline-light btn-sm me-2" href="CAMK_Analysis_Report.html" target="_blank">',
+    '\n                    📈 Analysis Results',
+    '\n                </a>',
+    '\n                <button class="btn btn-outline-light btn-sm" onclick="toggleTOC()">',
+    '\n                    📋 Table of Contents',
+    '\n                </button>',
+    '\n            </div>',
     '\n        </div>',
     '\n    </nav>',
     '\n    ',
@@ -531,8 +544,23 @@ get_custom_javascript <- function() {
                 htmlLabels: true,
                 curve: "cardinal"
             },
-            securityLevel: "loose"
+            securityLevel: "loose",
+            maxTextSize: 90000,
+            maxEdges: 2000,
+            deterministicIds: true,
+            deterministicIDSeed: "mermaidFlowchart"
         });
+        
+        // Error handling for Mermaid rendering
+        mermaid.parseError = function(err, hash) {
+            console.warn("Mermaid parsing error:", err);
+            if (hash && hash.str) {
+                const errorDiv = document.createElement("div");
+                errorDiv.className = "alert alert-warning";
+                errorDiv.innerHTML = "⚠️ Flowchart too complex to render. Please simplify or split into smaller diagrams.";
+                hash.str.parentNode.replaceChild(errorDiv, hash.str);
+            }
+        };
         
         // Table of Contents Toggle
         function toggleTOC() {
@@ -682,6 +710,71 @@ get_custom_javascript <- function() {
   '
   
   return(js)
+}
+
+#' Generate Analysis Results Summary
+#'
+#' Creates a summary section with current analysis results
+#' @return Character vector with markdown content
+generate_results_summary <- function() {
+  summary_content <- character()
+  
+  # Try to load analysis results
+  meta_file <- "output/current/CAMK_meta_analysis_FINAL.csv"
+  dge_file <- "output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv"
+  
+  summary_content <- c(summary_content, 
+    "## 📊 **Current Analysis Results**",
+    "",
+    '<div class="alert-custom alert-info">',
+    "**Latest Pipeline Execution Results** - Live data from current analysis run",
+    "</div>",
+    ""
+  )
+  
+  if (file.exists(meta_file)) {
+    tryCatch({
+      meta_results <- read.csv(meta_file, stringsAsFactors = FALSE)
+      
+      # Find CAMK2D results
+      camk2d_row <- meta_results[meta_results$Gene == "CAMK2D", ]
+      
+      if (nrow(camk2d_row) > 0) {
+        summary_content <- c(summary_content,
+          "### **🎯 Primary Gene Results**",
+          "",
+          paste("- **CAMK2D Log Fold Change:** ", round(camk2d_row$logFC, 4)),
+          paste("- **P-value:** ", format(camk2d_row$P.Value, scientific = TRUE, digits = 3)),
+          paste("- **Significance:** ", ifelse(camk2d_row$P.Value < 0.05, "✅ Significant", "❌ Not Significant")),
+          "",
+          "### **📈 Meta-Analysis Summary**",
+          "",
+          paste("- **Total Genes Analyzed:** ", nrow(meta_results)),
+          paste("- **Significant Genes:** ", sum(meta_results$P.Value < 0.05, na.rm = TRUE)),
+          paste("- **Effect Direction:** ", ifelse(camk2d_row$logFC > 0, "Upregulated", "Downregulated")),
+          ""
+        )
+      }
+    }, error = function(e) {
+      summary_content <- c(summary_content, "⚠️ Meta-analysis results not yet available", "")
+    })
+  } else {
+    summary_content <- c(summary_content, "ℹ️ Meta-analysis results will appear here after pipeline execution", "")
+  }
+  
+  # Add link to full analysis report
+  summary_content <- c(summary_content,
+    "### **🔗 Quick Links**",
+    "",
+    "- [📊 View Complete Analysis Report](CAMK_Analysis_Report.html)",
+    "- [📈 Download Meta-Analysis Results](CAMK_meta_analysis_FINAL.csv)",
+    "- [📋 Download DGE Results](CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv)",
+    "",
+    "---",
+    ""
+  )
+  
+  return(summary_content)
 }
 
 # Main execution

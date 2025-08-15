@@ -47,6 +47,31 @@ output:
         border-left: 4px solid #ffc107;
         margin: 10px 0;
       }
+      .nav-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      }
+      .nav-links {
+        display: flex;
+        gap: 15px;
+        margin-top: 10px;
+      }
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 20px;
+        transition: all 0.3s;
+      }
+      .nav-links a:hover {
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+      }
 ---
 
 ```{r setup, include=FALSE}
@@ -171,6 +196,25 @@ cat("- Minimum sample size: ", analysis_params$min_sample_size, "\n")
 cat("- FDR correction: ", analysis_params$fdr_correction, "\n")
 cat("- Meta-analysis method: ", analysis_params$meta_analysis_method, "\n\n")
 ```
+
+<div class="nav-banner">
+  <h4 style="margin: 0; font-weight: 600;">🧬 CAMK2D Pipeline Reports</h4>
+  <p style="margin: 5px 0; opacity: 0.9;">Complete analysis and documentation suite</p>
+  <div class="nav-links">
+    <a href="Interactive_Technical_Documentation.html" target="_blank">
+      📊 Interactive Documentation
+    </a>
+    <a href="#executive-summary">
+      📈 Analysis Results
+    </a>
+    <a href="#meta-analysis">
+      🔬 Meta-Analysis
+    </a>
+    <a href="#data-quality">
+      ✅ Data Quality
+    </a>
+  </div>
+</div>
 
 # Executive Summary {.tabset}
 
