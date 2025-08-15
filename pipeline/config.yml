@@ -29,6 +29,37 @@ pipeline:
     step_05_report_generator: ["step_04_meta_analysis"]
 
 # ═══════════════════════════════════════════════════════════════
+# DYNAMIC RESEARCH CONFIGURATION (PROMPT 2)
+# ═══════════════════════════════════════════════════════════════
+research_target:
+  primary_gene: "TP53"  # Main gene of interest - changed for testing dynamic capabilities
+  gene_family: []  # Auto-populated by gene family discovery
+  diseases: ["Lung Cancer", "Breast Cancer"]  # Diseases to study - changed for testing
+  auto_populate_family: true  # Whether to auto-discover gene family members
+
+# ═══════════════════════════════════════════════════════════════
+# ANALYSIS PARAMETERS (PROMPT 2)
+# ═══════════════════════════════════════════════════════════════
+analysis_parameters:
+  p_value_threshold: 0.05
+  log_fc_threshold: 0.1
+  min_sample_size: 20
+  fdr_correction: "BH"  # Benjamini-Hochberg
+  meta_analysis_method: "fixed"  # or "random"
+
+# ═══════════════════════════════════════════════════════════════
+# OUTPUT SETTINGS (PROMPT 2)
+# ═══════════════════════════════════════════════════════════════
+output_settings:
+  include_pathways: true
+  include_drug_targets: true
+  include_clinical_trials: true
+  include_literature_mining: true
+  include_gene_family_analysis: true
+  generate_excel_reports: true
+  generate_visualizations: true
+  
+# ═══════════════════════════════════════════════════════════════
 # ENHANCED DYNAMIC FEATURES (Optional - Non-Disruptive)
 # ═══════════════════════════════════════════════════════════════
 dynamic_features:
@@ -40,9 +71,9 @@ dynamic_features:
   literature_mining: false  # PubMed literature integration
   drug_target_prediction: false  # Pharmaceutical analysis
   
-  # Search parameters for dataset discovery
+  # Search parameters for dataset discovery (uses research_target diseases by default)
   search_parameters:
-    diseases: ["Heart Failure", "Atrial Fibrillation", "Cardiomyopathy"]
+    diseases: []  # If empty, uses research_target.diseases
     species: "Homo sapiens"
     platforms: ["GPL570", "GPL96", "GPL97"]
     min_samples: 20

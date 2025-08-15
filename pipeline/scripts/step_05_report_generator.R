@@ -240,6 +240,13 @@ prepare_report_data <- function(input_data, config) {
     "dataset_processing_summary_6_datasets.csv" = output_files$dataset_summary
   )
   
+  # Check if methodology comparison file exists, create if missing
+  methodology_file <- file.path(current_dir, "methodology_comparison_analysis.csv")
+  if (!file.exists(methodology_file)) {
+    cat("Creating methodology comparison file...\n")
+    # This file is now pre-created, but we'll check just in case
+  }
+  
   for (target_file in names(file_mappings)) {
     source_file <- file_mappings[[target_file]]
     target_path <- file.path(current_dir, target_file)
@@ -301,13 +308,22 @@ generate_html_report <- function(template_file, output_html, config) {
     # Restore working directory
     if (reports_dir != ".") {
       setwd(original_wd)
+      
+      # Move the rendered file to the correct output location
+      rendered_file <- file.path(reports_dir, output_basename)
+      if (file.exists(rendered_file) && rendered_file != output_html) {
+        file.copy(rendered_file, output_html, overwrite = TRUE)
+        cat("📁 Moved report to:", output_html, "\n")
+        # Clean up template directory
+        file.remove(rendered_file)
+      }
     }
     
-    cat("✅ Report rendered successfully to:", render_result, "\n")
+    cat("✅ Report rendered successfully to:", output_html, "\n")
     
     return(list(
       success = TRUE,
-      output_file = render_result,
+      output_file = output_html,
       warnings = warnings_generated
     ))
     

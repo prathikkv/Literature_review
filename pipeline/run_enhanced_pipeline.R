@@ -66,10 +66,33 @@ if (!file.exists(config_file)) {
 config <- yaml::read_yaml(config_file)
 cat("✅ Configuration loaded successfully\n")
 
-# Check for enhanced features
+# Check for enhanced features and auto-enable for non-CAMK2D genes
 enhanced_features <- config$dynamic_features %||% list(enabled = FALSE)
 
+# DYNAMIC FEATURE AUTO-ENABLING (PROMPT 4)
+primary_gene <- config$research_target$primary_gene %||% "CAMK2D"
+target_diseases <- config$research_target$diseases %||% c("Heart Failure", "Atrial Fibrillation")
+
+# Auto-enable enhanced features if gene/diseases differ from default CAMK2D setup
+auto_enable_needed <- (primary_gene != "CAMK2D" || 
+                      !all(target_diseases %in% c("Heart Failure", "Atrial Fibrillation")))
+
+if (auto_enable_needed && !enhanced_features$enabled) {
+  cat("🔧 Auto-enabling enhanced features for non-default gene/disease combination\n")
+  enhanced_features$enabled <- TRUE
+  enhanced_features$dataset_discovery <- TRUE
+  enhanced_features$gene_family_discovery <- TRUE
+  enhanced_features$auto_download <- TRUE
+  
+  # Update config
+  config$dynamic_features <- enhanced_features
+  yaml::write_yaml(config, config_file)
+  cat("✅ Enhanced features auto-enabled and saved to config\n")
+}
+
 cat("📊 Pipeline Mode:", ifelse(enhanced_features$enabled, "Enhanced", "Standard"), "\n")
+cat("🎯 Primary Gene:", primary_gene, "\n")
+cat("🏥 Target Diseases:", paste(target_diseases, collapse = ", "), "\n")
 
 if (enhanced_features$enabled) {
   cat("🔧 Enhanced Features Available:\n")
@@ -163,6 +186,21 @@ if (enhanced_features$enabled) {
     }
   }
   
+  # Gene family discovery (if enabled)
+  if (enhanced_features$gene_family_discovery && file.exists("modules/gene_family_discovery.R")) {
+    cat("\n🧬 Running gene family discovery module...\n")
+    source("modules/gene_family_discovery.R")
+    
+    enhanced_results$family_results <- discover_gene_family(
+      primary_gene = primary_gene,
+      config_file = config_file,
+      output_file = "output/gene_family_report.csv",
+      update_config = TRUE
+    )
+    
+    cat("✅ Gene family discovery completed\n")
+  }
+
   # Dataset discovery
   if (enhanced_features$dataset_discovery && file.exists("modules/dataset_discovery.R")) {
     cat("\n🔍 Running dataset discovery module...\n")
@@ -171,7 +209,7 @@ if (enhanced_features$enabled) {
     enhanced_results$discovery_results <- discover_geo_datasets(
       config_file = config_file,
       output_file = "output/discovered_datasets.xlsx",
-      auto_download = FALSE  # Set to TRUE to auto-download discovered datasets
+      auto_download = enhanced_features$auto_download %||% FALSE
     )
     
     cat("✅ Dataset discovery completed\n")

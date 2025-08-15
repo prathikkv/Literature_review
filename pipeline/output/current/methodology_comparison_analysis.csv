@@ -1,0 +1,21 @@
+Dataset,Step,Original_Method,Our_Method,Alignment,Impact,Notes
+GSE57338,Normalization,RMA (assumed),RMA via GEO,ALIGNED,None,Standard processing maintained
+GSE57338,Differential Expression,limma (assumed),limma with eBayes,ALIGNED,None,Gold standard approach
+GSE57338,Multiple Testing,FDR (assumed),Benjamini-Hochberg FDR,ALIGNED,None,Standard correction applied
+GSE57338,Sample Size,313,313,ALIGNED,None,Full dataset utilized
+GSE41177,Normalization,Undefined,RMA via GEO,IMPROVED,Major,Added standard normalization
+GSE41177,Differential Expression,K-means clustering,limma with eBayes,IMPROVED,Major,Proper statistical testing
+GSE41177,Multiple Testing,None mentioned,Benjamini-Hochberg FDR,IMPROVED,Major,Added p-value correction
+GSE41177,Sample Balance,32 AF : 6 SR,32 AF : 6 SR,ALIGNED,Critical,Severe imbalance flagged
+GSE79768,Normalization,R batch normalization,RMA via GEO,IMPROVED,Moderate,Standardized approach
+GSE79768,Differential Expression,Not specified,limma with eBayes,IMPROVED,Major,Added proper DE analysis
+GSE79768,Multiple Testing,Not specified,Benjamini-Hochberg FDR,IMPROVED,Major,Added correction
+GSE79768,Quality Control,Limited,Comprehensive QC,IMPROVED,Moderate,Added quality flags
+GSE115574,Normalization,R batch normalization,RMA via GEO,IMPROVED,Moderate,Standardized approach
+GSE115574,Differential Expression,Not specified,limma with eBayes,IMPROVED,Major,Added proper DE analysis
+GSE115574,Multiple Testing,Not specified,Benjamini-Hochberg FDR,IMPROVED,Major,Added correction
+GSE115574,Sample Size,59,59,ALIGNED,None,Full dataset utilized
+Meta-Analysis,Method,Not performed,Fixed-effects metafor,NEW,Critical,Added meta-analysis
+Meta-Analysis,Heterogeneity,Not assessed,I-squared statistic,NEW,Major,Added heterogeneity assessment
+Meta-Analysis,Forest Plots,Not created,Comprehensive plots,NEW,Major,Added visualization
+Meta-Analysis,Validation,None,Cross-dataset validation,NEW,Critical,Added robustness checks

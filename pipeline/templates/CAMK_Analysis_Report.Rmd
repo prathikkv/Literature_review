@@ -1,5 +1,5 @@
 ---
-title: "CAMK Gene Family in Cardiovascular Disease"
+title: "`r paste(config$research_target$primary_gene, 'Gene Family in', paste(config$research_target$diseases, collapse = ' and '))`"
 subtitle: "Comprehensive Meta-Analysis Across Multiple Datasets"
 author: "Bioinformatics Research Team"
 date: "`r Sys.Date()`"
@@ -50,6 +50,17 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+# Load configuration for dynamic content
+library(yaml)
+config <- yaml::read_yaml("../config.yml")
+
+# Extract key variables for easy access
+primary_gene <- config$research_target$primary_gene
+gene_family <- config$research_target$gene_family
+target_diseases <- config$research_target$diseases
+analysis_params <- config$analysis_parameters
+output_settings <- config$output_settings
+
 knitr::opts_chunk$set(
   echo = FALSE,
   warning = FALSE,
@@ -71,7 +82,7 @@ for (pkg in required_packages) {
   }
 }
 
-# Load comprehensive analysis results
+# Load comprehensive analysis results (DYNAMIC)
 load_analysis_results <- function() {
   tryCatch({
     # Load meta-analysis results (pipeline-relative paths)
@@ -92,6 +103,11 @@ load_analysis_results <- function() {
       meta_results = meta_results,
       individual_results = individual_results,
       dataset_summary = dataset_summary,
+      config = config,
+      primary_gene = primary_gene,
+      target_diseases = target_diseases,
+      analysis_params = analysis_params,
+      output_settings = output_settings,
       metrics = list(
         total_datasets = total_datasets,
         total_samples = total_samples,
@@ -112,8 +128,39 @@ if (is.null(analysis_data)) {
   stop("Failed to load analysis results. Please run the analysis pipeline first.")
 }
 
-# Extract CAMK2D results for highlighting
-camk2d_meta <- analysis_data$meta_results[analysis_data$meta_results$Gene == "CAMK2D", ]
+# Extract primary gene results for highlighting (DYNAMIC)
+primary_gene_meta <- analysis_data$meta_results[analysis_data$meta_results$Gene == primary_gene, ]
+```
+
+```{r dynamic-intro, results='asis'}
+# DYNAMIC INTRODUCTION (PROMPT 6)
+cat("# Analysis Overview\n\n")
+cat("This comprehensive analysis focuses on **", primary_gene, "** gene family in the context of ", 
+    paste(target_diseases, collapse = " and "), ".\n\n", sep = "")
+
+if (length(gene_family) > 0) {
+  cat("**Gene Family Members Analyzed:** ", length(gene_family), " genes\n\n")
+  cat("- Primary Gene: **", primary_gene, "**\n")
+  if (length(gene_family) > 1) {
+    family_members <- gene_family[gene_family != primary_gene]
+    if (length(family_members) > 0) {
+      cat("- Family Members: ", paste(family_members, collapse = ", "), "\n")
+    }
+  }
+  cat("\n")
+}
+
+cat("**Diseases of Interest:**\n")
+for (disease in target_diseases) {
+  cat("- ", disease, "\n")
+}
+
+cat("\n**Analysis Parameters:**\n")
+cat("- P-value threshold: ", analysis_params$p_value_threshold, "\n")
+cat("- Log FC threshold: ", analysis_params$log_fc_threshold, "\n")
+cat("- Minimum sample size: ", analysis_params$min_sample_size, "\n")
+cat("- FDR correction: ", analysis_params$fdr_correction, "\n")
+cat("- Meta-analysis method: ", analysis_params$meta_analysis_method, "\n\n")
 ```
 
 # Executive Summary {.tabset}
@@ -249,14 +296,38 @@ Our comprehensive analysis demonstrates that we **follow and exceed** the method
 
 ```{r methodology-validation}
 # Load methodology comparison data
-methodology_comparison <- read.csv("../output/current/methodology_comparison_analysis.csv", stringsAsFactors = FALSE)
+methodology_file <- "../output/current/methodology_comparison_analysis.csv"
+if (file.exists(methodology_file)) {
+  methodology_comparison <- read.csv(methodology_file, stringsAsFactors = FALSE)
+} else {
+  # Create placeholder data if file doesn't exist
+  methodology_comparison <- data.frame(
+    Dataset = character(),
+    Step = character(),
+    Original_Method = character(),
+    Our_Method = character(),
+    Alignment = character(),
+    Impact = character(),
+    Notes = character(),
+    stringsAsFactors = FALSE
+  )
+}
 
 # Create methodology alignment summary
-alignment_summary <- table(methodology_comparison$Alignment)
+alignment_summary <- if(nrow(methodology_comparison) > 0) {
+  table(methodology_comparison$Alignment)
+} else {
+  table(character())
+}
+
 cat("**METHODOLOGY VALIDATION RESULTS:**\n")
-cat("✅ FULLY_ALIGNED:", alignment_summary["FULLY_ALIGNED"], "studies\n")
-cat("✅ ALIGNED:", alignment_summary["ALIGNED"], "studies\n") 
-cat("✅ IMPROVED:", alignment_summary["IMPROVED"], "analyses\n")
+if(length(alignment_summary) > 0) {
+  cat("✅ FULLY_ALIGNED:", alignment_summary["FULLY_ALIGNED"], "studies\n")
+  cat("✅ ALIGNED:", alignment_summary["ALIGNED"], "studies\n") 
+  cat("✅ IMPROVED:", alignment_summary["IMPROVED"], "analyses\n")
+} else {
+  cat("No methodology comparison data available\n")
+}
 cat("✅ STANDARDIZED:", alignment_summary["STANDARDIZED"], "processes\n")
 cat("✅ GOLD_STANDARD:", alignment_summary["GOLD_STANDARD"], "methods\n")
 cat("✅ ENHANCED:", alignment_summary["ENHANCED"], "procedures\n\n")
@@ -268,16 +339,20 @@ cat("Our methodology meets or exceeds original publication standards.\n\n")
 ### Key Methodological Findings
 
 ```{r methodology-table}
-DT::datatable(methodology_comparison,
-              caption = "Detailed Methodology Comparison Analysis",
-              filter = 'top',
-              options = list(pageLength = 10, scrollX = TRUE),
-              class = 'cell-border stripe hover') %>%
+if(nrow(methodology_comparison) > 0) {
+  DT::datatable(methodology_comparison,
+                caption = "Detailed Methodology Comparison Analysis",
+                filter = 'top',
+                options = list(pageLength = 10, scrollX = TRUE),
+                class = 'cell-border stripe hover') %>%
   DT::formatStyle('Alignment', 
                   backgroundColor = DT::styleEqual(
                     c('FULLY_ALIGNED', 'ALIGNED', 'IMPROVED', 'STANDARDIZED', 'GOLD_STANDARD', 'ENHANCED'),
                     c('#d4edda', '#d4edda', '#cce7ff', '#e7f3ff', '#fff3cd', '#f0f8ff')
                   ))
+} else {
+  cat("No methodology comparison data available to display\n")
+}
 ```
 
 ## Original vs Our Preprocessing Methods
@@ -550,10 +625,10 @@ if (nrow(camk2d_meta) > 0) {
 
 ```{r individual-camk2d}
 # Extract CAMK2D results from all datasets
-camk2d_individual <- analysis_data$individual_results[analysis_data$individual_results$Gene_Symbol == "CAMK2D", ]
+primary_gene_individual <- analysis_data$individual_results[analysis_data$individual_results$Gene_Symbol == primary_gene, ]
 
-if (nrow(camk2d_individual) > 0) {
-  camk2d_table <- camk2d_individual %>%
+if (nrow(primary_gene_individual) > 0) {
+  primary_gene_table <- primary_gene_individual %>%
     select(Dataset, logFC, P.Value, adj.P.Val, Significant, Biological_Context, Sample_Size, Priority) %>%
     mutate(
       logFC = round(logFC, 4),
