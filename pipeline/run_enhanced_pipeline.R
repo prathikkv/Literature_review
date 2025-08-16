@@ -344,15 +344,27 @@ if (!enhanced_only) {
   cat("ℹ️  Executing standard CAMK2D pipeline (unchanged)\n")
   
   # Check if base pipeline is available
-  base_script <- "run_pipeline.R"
+  base_script <- "scripts/pipeline_orchestrator.R"
   if (file.exists(base_script)) {
     cat("✅ Found base pipeline script:", base_script, "\n")
     cat("🚀 Executing base pipeline...\n\n")
     
-    # Source the base pipeline
+    # Source and execute the base pipeline
     tryCatch({
       source(base_script, local = FALSE)
-      cat("\n✅ Base pipeline execution completed\n")
+      
+      # Execute the pipeline using the orchestrator
+      pipeline_result <- execute_dynamic_pipeline(
+        config_file = config_file,
+        force_rerun = FALSE,
+        steps_to_run = NULL
+      )
+      
+      if (pipeline_result$success) {
+        cat("\n✅ Base pipeline execution completed successfully\n")
+      } else {
+        cat("\n⚠️  Base pipeline completed with issues\n")
+      }
     }, error = function(e) {
       cat("❌ Base pipeline execution failed:", e$message, "\n")
     })
