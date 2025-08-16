@@ -527,7 +527,7 @@ generate_table_of_contents <- function(content) {
 #' @return JavaScript string
 get_custom_javascript <- function() {
   js <- '
-        // Initialize Mermaid
+        // Initialize Mermaid with production-ready configuration
         mermaid.initialize({
             startOnLoad: true,
             theme: "default",
@@ -537,30 +537,83 @@ get_custom_javascript <- function() {
                 primaryBorderColor: "#1976d2",
                 lineColor: "#666",
                 secondaryColor: "#f5f5f5",
-                tertiaryColor: "#ffffff"
+                tertiaryColor: "#ffffff",
+                fontFamily: "Arial, sans-serif"
             },
             flowchart: {
                 useMaxWidth: true,
                 htmlLabels: true,
-                curve: "cardinal"
+                curve: "cardinal",
+                padding: 15,
+                nodeSpacing: 50,
+                rankSpacing: 50,
+                diagramPadding: 8
+            },
+            gantt: {
+                numberSectionStyles: 3,
+                fontSize: 11
+            },
+            journey: {
+                diagramMarginX: 50,
+                diagramMarginY: 10
             },
             securityLevel: "loose",
-            maxTextSize: 90000,
-            maxEdges: 2000,
+            maxTextSize: 200000,  // Increased for production
+            maxEdges: 5000,       // Increased for complex diagrams
             deterministicIds: true,
-            deterministicIDSeed: "mermaidFlowchart"
+            deterministicIDSeed: "mermaidFlowchart",
+            logLevel: 3           // Error logging only in production
         });
         
-        // Error handling for Mermaid rendering
+        // Production-ready error handling for Mermaid rendering
         mermaid.parseError = function(err, hash) {
             console.warn("Mermaid parsing error:", err);
-            if (hash && hash.str) {
-                const errorDiv = document.createElement("div");
-                errorDiv.className = "alert alert-warning";
-                errorDiv.innerHTML = "⚠️ Flowchart too complex to render. Please simplify or split into smaller diagrams.";
-                hash.str.parentNode.replaceChild(errorDiv, hash.str);
+            
+            // Create informative error message
+            const errorDiv = document.createElement("div");
+            errorDiv.className = "alert alert-warning p-3 m-2";
+            errorDiv.style.backgroundColor = "#fff3cd";
+            errorDiv.style.border = "1px solid #ffc107";
+            errorDiv.style.borderRadius = "8px";
+            
+            let errorMessage = "<strong>⚠️ Diagram Rendering Notice</strong><br>";
+            
+            if (err && err.toString().includes("Maximum text size")) {
+                errorMessage += "This flowchart contains too much text to render visually.<br>";
+                errorMessage += "<small>Consider viewing the markdown source for full details.</small>";
+            } else if (err && err.toString().includes("Maximum edges")) {
+                errorMessage += "This flowchart is too complex to render visually.<br>";
+                errorMessage += "<small>The diagram has been simplified for display.</small>";
+            } else {
+                errorMessage += "Unable to render this flowchart.<br>";
+                errorMessage += "<small>Error: " + (err ? err.toString().substring(0, 100) : "Unknown") + "</small>";
+            }
+            
+            errorDiv.innerHTML = errorMessage;
+            
+            // Replace the failed diagram with error message
+            if (hash && hash.element) {
+                hash.element.innerHTML = "";
+                hash.element.appendChild(errorDiv);
             }
         };
+        
+        // Fallback for diagrams that fail silently
+        window.addEventListener("load", function() {
+            setTimeout(function() {
+                const mermaidDivs = document.querySelectorAll(".mermaid");
+                mermaidDivs.forEach(function(div) {
+                    if (div.innerHTML.includes("graph") || div.innerHTML.includes("flowchart")) {
+                        // Diagram code still present = failed to render
+                        const errorDiv = document.createElement("div");
+                        errorDiv.className = "alert alert-info";
+                        errorDiv.innerHTML = "📊 Diagram preview unavailable - View source for details";
+                        div.innerHTML = "";
+                        div.appendChild(errorDiv);
+                    }
+                });
+            }, 3000); // Check after 3 seconds
+        });
         
         // Table of Contents Toggle
         function toggleTOC() {

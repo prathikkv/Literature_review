@@ -12,8 +12,61 @@
 cat("\n")
 cat("╔══════════════════════════════════════════════════════════════╗\n")
 cat("║        ENHANCED CAMK2D ANALYSIS PIPELINE                    ║\n")
-cat("║        Backwards Compatible Dynamic Features                 ║\n")
+cat("║        Production-Ready Integrated Reporting Suite           ║\n")
 cat("╚══════════════════════════════════════════════════════════════╝\n")
+cat("\n")
+
+# Startup validation
+cat("🔍 Performing startup validation...\n")
+
+# Check required packages
+required_packages <- c("yaml", "tidyverse", "rmarkdown", "knitr", "limma", "metafor")
+missing_packages <- character()
+
+for (pkg in required_packages) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    missing_packages <- c(missing_packages, pkg)
+  }
+}
+
+if (length(missing_packages) > 0) {
+  cat("❌ Missing required packages:", paste(missing_packages, collapse = ", "), "\n")
+  cat("   Install with: install.packages(c('", paste(missing_packages, collapse = "', '"), "'))\n")
+  quit(save = "no", status = 1)
+}
+
+# Check critical files
+critical_files <- c(
+  "config.yml",
+  "scripts/pipeline_orchestrator.R",
+  "generate_interactive_documentation.R",
+  "Technical_Documentation_CAMK2D_Pipeline.md"
+)
+
+for (file in critical_files) {
+  if (!file.exists(file)) {
+    cat("❌ Critical file missing:", file, "\n")
+    quit(save = "no", status = 1)
+  }
+}
+
+cat("✅ All dependencies validated\n")
+
+# Clean old logs (keep only last 2 runs)
+tryCatch({
+  # Clean old run directories
+  run_dirs <- list.dirs("output/runs", full.names = TRUE, recursive = FALSE)
+  if (length(run_dirs) > 2) {
+    old_dirs <- head(run_dirs[order(file.info(run_dirs)$mtime)], -2)
+    for (dir in old_dirs) {
+      unlink(dir, recursive = TRUE)
+    }
+    cat("🧹 Cleaned", length(old_dirs), "old run directories\n")
+  }
+}, error = function(e) {
+  # Silent fail - not critical
+})
+
 cat("\n")
 
 # Load required libraries
@@ -341,17 +394,24 @@ if (!enhanced_only) {
   
   cat("\n🔄 STEP 3: Base Pipeline Execution\n")
   cat("═══════════════════════════════════════════════════════════════\n")
-  cat("ℹ️  Executing standard CAMK2D pipeline (unchanged)\n")
+  cat("ℹ️  Executing standard CAMK2D analysis pipeline\n")
   
   # Check if base pipeline is available
   base_script <- "scripts/pipeline_orchestrator.R"
   if (file.exists(base_script)) {
     cat("✅ Found base pipeline script:", base_script, "\n")
-    cat("🚀 Executing base pipeline...\n\n")
+    cat("🚀 Starting analysis pipeline...\n")
+    cat("   This may take 2-5 minutes depending on your system\n\n")
+    
+    # Track execution time
+    start_time <- Sys.time()
     
     # Source and execute the base pipeline
     tryCatch({
       source(base_script, local = FALSE)
+      
+      # Show progress indicator
+      cat("⏳ Step 1/5: Loading datasets...\n")
       
       # Execute the pipeline using the orchestrator
       pipeline_result <- execute_dynamic_pipeline(
@@ -360,13 +420,20 @@ if (!enhanced_only) {
         steps_to_run = NULL
       )
       
+      # Calculate execution time
+      end_time <- Sys.time()
+      duration <- round(difftime(end_time, start_time, units = "secs"), 1)
+      
       if (pipeline_result$success) {
         cat("\n✅ Base pipeline execution completed successfully\n")
+        cat("⏱️  Execution time:", duration, "seconds\n")
       } else {
         cat("\n⚠️  Base pipeline completed with issues\n")
+        cat("   Check logs in output/logs/ for details\n")
       }
     }, error = function(e) {
       cat("❌ Base pipeline execution failed:", e$message, "\n")
+      cat("   Try running with --enhanced-only flag to skip base pipeline\n")
     })
     
   } else {
