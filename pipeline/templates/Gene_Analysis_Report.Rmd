@@ -111,10 +111,14 @@ for (pkg in required_packages) {
 load_analysis_results <- function() {
   tryCatch({
     # Load meta-analysis results (pipeline-relative paths)
-    meta_results <- read.csv("../output/current/CAMK_meta_analysis_FINAL.csv", stringsAsFactors = FALSE)
+    # Dynamic file path using gene name from config
+    meta_file <- paste0("../output/current/", toupper(primary_gene), "_meta_analysis_FINAL.csv")
+    meta_results <- read.csv(meta_file, stringsAsFactors = FALSE)
     
     # Load individual dataset results  
-    individual_results <- read.csv("../output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv", stringsAsFactors = FALSE)
+    # Dynamic file path for DGE results
+    dge_file <- paste0("../output/current/", toupper(primary_gene), "_DGE_all_datasets_COMPREHENSIVE.csv")
+    individual_results <- read.csv(dge_file, stringsAsFactors = FALSE)
     
     # Load dataset summary
     dataset_summary <- read.csv("../output/current/dataset_processing_summary_6_datasets.csv", stringsAsFactors = FALSE)
@@ -155,6 +159,9 @@ if (is.null(analysis_data)) {
 
 # Extract primary gene results for highlighting (DYNAMIC)
 primary_gene_meta <- analysis_data$meta_results[analysis_data$meta_results$Gene == primary_gene, ]
+
+# Create dynamic alias for primary gene meta results (for backward compatibility)
+camk2d_meta <- primary_gene_meta
 ```
 
 ```{r dynamic-title, results='asis'}
@@ -576,9 +583,9 @@ successful_datasets <- analysis_data$dataset_summary[analysis_data$dataset_summa
 
 if (nrow(successful_datasets) > 0) {
   dataset_table <- successful_datasets %>%
-    select(Dataset, Priority, Samples, Disease_Type, Biological_Context, CAMK_Genes, Significant_CAMK) %>%
+    select(Dataset, Priority, Samples, Disease_Type, Biological_Context, CAMK_Genes_Analyzed, CAMK_Significant) %>%
     mutate(
-      Success_Rate = paste0(round(Significant_CAMK/CAMK_Genes*100, 1), "%"),
+      Success_Rate = paste0(round(CAMK_Significant/CAMK_Genes_Analyzed*100, 1), "%"),
       Sample_Size_Grade = case_when(
         Samples >= 100 ~ "Large",
         Samples >= 50 ~ "Medium", 
@@ -595,7 +602,7 @@ if (nrow(successful_datasets) > 0) {
     DT::formatStyle('Priority', 
                     backgroundColor = DT::styleEqual('HIGH', '#d4edda')) %>%
     DT::formatStyle('Success_Rate',
-                    background = DT::styleColorBar(dataset_table$Significant_CAMK, 'lightblue'))
+                    background = DT::styleColorBar(dataset_table$CAMK_Significant, 'lightblue'))
 }
 ```
 
@@ -715,6 +722,9 @@ if (nrow(camk2d_meta) > 0) {
 # Extract CAMK2D results from all datasets
 primary_gene_individual <- analysis_data$individual_results[analysis_data$individual_results$Gene_Symbol == primary_gene, ]
 
+# Create dynamic alias for backward compatibility
+camk2d_individual <- primary_gene_individual
+
 if (nrow(primary_gene_individual) > 0) {
   primary_gene_table <- primary_gene_individual %>%
     select(Dataset, logFC, P.Value, adj.P.Val, Significant, Biological_Context, Sample_Size, Priority) %>%
@@ -726,6 +736,9 @@ if (nrow(primary_gene_individual) > 0) {
       Significance = ifelse(Significant, "✅ SIG", "❌ NS")
     ) %>%
     arrange(desc(Priority), desc(Sample_Size))
+  
+  # Create dynamic alias for backward compatibility
+  camk2d_table <- primary_gene_table
   
   DT::datatable(camk2d_table,
                 caption = "CAMK2D Results Across All Datasets",
@@ -1656,9 +1669,10 @@ p_pathways <- ggplot(pathway_enrichments, aes(x = reorder(Pathway_Term, neg_log1
 
 print(p_pathways)
 
-# Create pathway summary table
+# Create pathway summary table  
 pathway_summary <- pathway_enrichments %>%
   select(Pathway_Database, Pathway_Term, Gene_Count, CAMK_Genes_Present, Enrichment_Strength, neg_log10_p) %>%
+  rename(!!paste0(toupper(primary_gene), "_Genes_Present") := CAMK_Genes_Present) %>%
   arrange(desc(neg_log10_p)) %>%
   select(-neg_log10_p)
 

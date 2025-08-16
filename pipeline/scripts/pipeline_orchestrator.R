@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 #' Pipeline Orchestrator
 #' 
-#' Main controller for the dynamic CAMK2D analysis pipeline
+#' Main controller for the dynamic gene analysis pipeline
 #' Manages step execution, dependencies, checkpointing, and error handling
 
 # Load required utilities
@@ -32,7 +32,11 @@ execute_dynamic_pipeline <- function(config_file = "config.yml",
   
   pipeline_start_time <- Sys.time()
   
-  cat("🚀 CAMK2D DYNAMIC PIPELINE ORCHESTRATOR\n")
+  # Load config early to get gene name for banner
+  temp_config <- yaml::read_yaml(config_file)
+  primary_gene <- temp_config$research_target$primary_gene %||% "UNKNOWN"
+  
+  cat("🚀", toupper(primary_gene), "DYNAMIC PIPELINE ORCHESTRATOR\n")
   cat("═══════════════════════════════════════════════════════════════\n")
   cat("Pipeline execution started at:", as.character(pipeline_start_time), "\n")
   cat("Configuration file:", config_file, "\n")
@@ -103,7 +107,7 @@ execute_dynamic_pipeline <- function(config_file = "config.yml",
       cat("\n📊 KEY SCIENTIFIC RESULTS:\n")
       cat("  Genes analyzed:", meta_summary$genes_analyzed %||% "N/A", "\n")
       cat("  Significant genes:", meta_summary$significant_genes %||% "N/A", "\n")
-      cat("  CAMK2D significant:", if (meta_summary$camk2d_significant %||% FALSE) "YES ✅" else "NO", "\n")
+      cat(" ", primary_gene, "significant:", if (meta_summary$primary_gene_significant %||% FALSE) "YES ✅" else "NO", "\n")
       
       if (!is.null(execution_result$final_result$output_data$report_path)) {
         cat("  Report generated:", execution_result$final_result$output_data$report_path, "\n")
@@ -436,8 +440,8 @@ test_dynamic_pipeline <- function(config_file = "config.yml") {
   return(result)
 }
 
-# Auto-execute if run as script
-if (!interactive()) {
+# Auto-execute if run as script (but not when sourced)
+if (!interactive() && length(sys.calls()) == 0) {
   args <- commandArgs(trailingOnly = TRUE)
   
   if (length(args) == 0) {

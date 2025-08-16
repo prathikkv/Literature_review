@@ -1,7 +1,7 @@
 pipeline:
-  name: CAMK2D Self-Contained Analysis Pipeline
-  version: 1.0.0-selfcontained
-  description: Reproduces v1.0.0 production results in self-contained environment
+  name: Dynamic Gene Analysis Pipeline
+  version: 1.0.0-dynamic
+  description: Configurable gene analysis pipeline for any gene and disease combination
   execution_mode: dynamic
   steps:
   - step_01_data_loader
@@ -37,15 +37,17 @@ output_settings:
   generate_excel_reports: yes
   generate_visualizations: yes
 dynamic_features:
-  enabled: yes
-  auto_download: yes
-  dataset_discovery: yes
-  pathway_analysis: yes
-  gene_family_discovery: yes
-  literature_mining: yes
-  drug_target_prediction: yes
+  enabled: no
+  auto_download: no
+  dataset_discovery: no
+  pathway_analysis: no
+  gene_family_discovery: no
+  literature_mining: no
+  drug_target_prediction: no
   search_parameters:
-    diseases: []
+    diseases:
+    - Breast Cancer
+    - Lung Cancer
     species: Homo sapiens
     platforms:
     - GPL570
@@ -75,6 +77,7 @@ datasets:
       platform: GPL570
       cache_location: cache/comprehensive/GSE57338_processed.rds
       fallback_location: cache/microarray/GSE57338_processed.rds
+      status: enabled
     GSE41177:
       description: Atrial fibrillation vs sinus rhythm
       disease_type: Atrial fibrillation
@@ -115,7 +118,7 @@ datasets:
       inclusion_reason: Small but supports AF pattern, literature validation
       platform: GPL570
       cache_location: cache/microarray/GSE31821_processed.rds
-      status: optional
+      status: enabled
     GSE14975:
       description: Heart failure vs healthy
       disease_type: Heart failure
@@ -126,9 +129,9 @@ datasets:
       inclusion_reason: Small but supports heart failure pattern
       platform: GPL570
       cache_location: cache/microarray/GSE14975_processed.rds
-      status: optional
+      status: enabled
 genes:
-  camk_core_genes:
+  core_gene_family:
   - CAMK2D
   - CAMK2A
   - CAMK2B
@@ -141,7 +144,7 @@ genes:
   - CAMK4
   - CAMKV
   validation:
-    require_primary_gene: CAMK2D
+    require_primary_gene: yes
     min_genes_detected: 5
   minimum_genes:
     HIGH: 8
@@ -215,18 +218,18 @@ paths:
     checkpoints: output/checkpoints
     logs: output/logs
   output_files:
-    dge_results: output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv
-    meta_results: output/current/CAMK_meta_analysis_FINAL.csv
-    dataset_summary: output/current/dataset_processing_summary_6_datasets.csv
+    dge_results: output/current/{GENE}_DGE_all_datasets_COMPREHENSIVE.csv
+    meta_results: output/current/{GENE}_meta_analysis_FINAL.csv
+    dataset_summary: output/current/dataset_processing_summary.csv
   reports:
     analysis_report:
-      template: templates/CAMK_Analysis_Report.Rmd
-      output_html: output/current/CAMK_Analysis_Report.html
+      template: templates/Gene_Analysis_Report.Rmd
+      output_html: output/current/{GENE}_Analysis_Report.html
       enabled: yes
     interactive_documentation:
-      input_markdown: Technical_Documentation_CAMK2D_Pipeline.md
+      input_markdown: Technical_Documentation_Pipeline.md
       output_html: output/current/Interactive_Technical_Documentation.html
-      title: CAMK2D Pipeline - Interactive Technical Documentation
+      title: '{GENE} Pipeline - Interactive Technical Documentation'
       enabled: yes
       mermaid_theme: default
       include_downloads: yes
@@ -248,10 +251,8 @@ execution:
     include_performance_metrics: yes
 validation:
   baseline_comparison:
-    enabled: yes
+    enabled: no
     baseline_results:
-      camk2d_combined_logfc: 0.0552
-      camk2d_p_value: 0.0152
       total_datasets_success: 4
       total_samples: 436
       significant_genes: 8
@@ -260,9 +261,9 @@ validation:
     p_value_tolerance: 1e-6
     sample_count_tolerance: 0
   success_criteria:
-    min_datasets_processed: 4
-    camk2d_must_be_significant: yes
-    all_core_genes_detected: yes
+    min_datasets_processed: 2
+    primary_gene_must_be_significant: no
+    all_core_genes_detected: no
     report_generation_success: yes
 packages:
   required:
@@ -297,10 +298,10 @@ metadata:
     - Linux
     - Windows
   scientific_context:
-    focus_gene: CAMK2D
-    disease_focus: Cardiovascular disease (heart failure, atrial fibrillation)
+    focus_gene: dynamic
+    disease_focus: dynamic
     analysis_type: Meta-analysis of differential gene expression
-    therapeutic_significance: CAMK2D validated as therapeutic target
+    therapeutic_significance: Determined by research findings
 gene_analysis:
   primary_gene: CAMK2D
   gene_family:

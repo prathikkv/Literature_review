@@ -1,0 +1,73 @@
+validation_date: 1.7553424e+09
+pipeline_version: 1.0.0-dynamic
+baseline_version: v1.0.0
+overall_success: no
+critical_success: no
+total_checks: 8
+passed_checks: 4
+failed_checks: 4
+warning_checks: 0
+detailed_results:
+  file_validation:
+    html_report:
+      exists: yes
+      path: output/current/CAMK_Analysis_Report.html
+      size_mb: 6.68
+      meets_size_requirement: yes
+      status: PASS
+    meta_analysis_results:
+      exists: no
+      path: output/current/CAMK_meta_analysis_FINAL.csv
+      size_mb: 0.0
+      status: MISSING
+    dge_results:
+      exists: yes
+      path: output/current/CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv
+      size_mb: 0.01
+      meets_size_requirement: yes
+      status: PASS
+    dataset_summary:
+      exists: yes
+      path: output/current/dataset_processing_summary_6_datasets.csv
+      size_mb: 0.0
+      meets_size_requirement: yes
+      status: PASS
+  meta_analysis:
+    camk2d_logfc:
+      match: no
+      actual: 0.1141835
+      expected: 0.0552
+      difference: 0.0589835
+      tolerance: 0.0001
+      name: CAMK2D_logFC
+      status: FAIL
+    camk2d_pvalue:
+      match: no
+      actual: 0.021888
+      expected: 0.0152
+      difference: 0.006688
+      tolerance: 1.0e-06
+      name: CAMK2D_p_value
+      status: FAIL
+    camk2d_significance:
+      match: yes
+      actual: yes
+      expected: yes
+      name: CAMK2D_significance
+      status: PASS
+    significant_genes:
+      match: no
+      actual: 2
+      expected: 8
+      name: significant_genes_count
+      status: FAIL
+  dataset_processing: []
+all_validation_statuses:
+  file_html_report: PASS
+  file_meta_analysis_results: MISSING
+  file_dge_results: PASS
+  file_dataset_summary: PASS
+  meta_camk2d_logfc: FAIL
+  meta_camk2d_pvalue: FAIL
+  meta_camk2d_significance: PASS
+  meta_significant_genes: FAIL

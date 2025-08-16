@@ -39,35 +39,33 @@ step_05_report_generator <- function(step_name, input_data, config, checkpoint_d
     ))
   }
   
-  # DYNAMIC REPORT NAMING AND ORGANIZATION (STANDARDS COMPLIANT)
+  # SIMPLE REPORT GENERATION (V1.0.0 COMPATIBLE)
   primary_gene <- config$research_target$primary_gene %||% "UNKNOWN"
   diseases <- config$research_target$diseases %||% c("Unknown")
   
-  # Generate run ID and directory structure
-  run_id <- generate_run_id(primary_gene, diseases)
-  run_dirs <- create_run_directory("output", run_id, create_symlink = TRUE)
+  # Use existing output/current directory structure (no timestamped directories)
+  current_output_dir <- "output/current"
+  if (!dir.exists(current_output_dir)) {
+    dir.create(current_output_dir, recursive = TRUE)
+  }
   
-  # Create and save run metadata
-  run_metadata <- create_run_metadata(config, run_id)
-  save_run_metadata(run_metadata, run_dirs)
-  
-  # Update config with dynamic paths
-  config <- update_output_paths_in_config(config, run_dirs, primary_gene, diseases)
+  # Update config paths to use current directory (replace {GENE} placeholders)
+  config$paths$output_files$dge_results <- gsub("\\{GENE\\}", primary_gene, config$paths$output_files$dge_results)
+  config$paths$output_files$meta_results <- gsub("\\{GENE\\}", primary_gene, config$paths$output_files$meta_results)
+  config$paths$reports$analysis_report$output_html <- gsub("\\{GENE\\}", primary_gene, config$paths$reports$analysis_report$output_html)
   
   # Get report configuration (now with dynamic paths)
-  report_config <- config$paths$reports
+  report_config <- config$paths$reports$analysis_report
   
-  cat("📋 DYNAMIC REPORT GENERATION CONFIGURATION:\n")
+  cat("📋 REPORT GENERATION CONFIGURATION:\n")
   cat("🎯 Gene:", primary_gene, "\n")
   cat("🏥 Diseases:", paste(diseases, collapse = ", "), "\n")
-  cat("🆔 Run ID:", run_id, "\n")
-  cat("📁 Output Directory:", run_dirs$current_run, "\n")
-  cat("📄 Template:", report_config$template %||% "templates/CAMK_Analysis_Report.Rmd", "\n")
-  cat("📊 Report File:", report_config$output_html, "\n")
-  cat("🔗 Current Symlink:", run_dirs$current_symlink, "\n\n")
+  cat("📁 Output Directory:", current_output_dir, "\n")
+  cat("📄 Template:", report_config$template %||% "templates/Gene_Analysis_Report.Rmd", "\n")
+  cat("📊 Report File:", report_config$output_html, "\n\n")
   
   # Verify required files exist
-  template_file <- report_config$template %||% "reports/CAMK_Analysis_Professional_Report.Rmd"
+  template_file <- report_config$template %||% "templates/Gene_Analysis_Report.Rmd"
   
   if (!file.exists(template_file)) {
     return(create_step_result(
@@ -78,7 +76,9 @@ step_05_report_generator <- function(step_name, input_data, config, checkpoint_d
   }
   
   # Ensure output directory exists
-  output_html <- report_config$output_html %||% "reports/CAMK_Analysis_Professional_Report_DYNAMIC.html"
+  # Replace {GENE} placeholder with actual gene name
+  output_html_template <- report_config$output_html %||% "reports/{GENE}_Analysis_Report.html"
+  output_html <- gsub("\\{GENE\\}", toupper(primary_gene), output_html_template)
   output_dir <- dirname(output_html)
   
   if (!dir.exists(output_dir)) {
@@ -187,7 +187,7 @@ step_05_report_generator <- function(step_name, input_data, config, checkpoint_d
   cat("📊 Final Results Summary:\n")
   cat("  Genes analyzed:", meta_summary$genes_analyzed, "\n")
   cat("  Significant genes:", meta_summary$significant_genes, "\n")
-  cat("  CAMK2D significant:", if (meta_summary$camk2d_significant) "YES ✅" else "NO", "\n")
+  cat("  CAMK2D significant:", if (!is.null(meta_summary$camk2d_significant) && meta_summary$camk2d_significant) "YES ✅" else "NO", "\n")
   cat("  Report generated:", output_html, "\n")
   cat("  Report size:", report_size_mb, "MB\n")
   
@@ -225,61 +225,68 @@ prepare_report_data <- function(input_data, config) {
   # Check that required output files exist and are up to date
   output_files <- config$paths$output_files
   
-  # Verify meta-analysis results file
-  if (!is.null(output_files$meta_results)) {
-    if (!file.exists(output_files$meta_results)) {
-      return(list(success = FALSE, reason = "Meta-analysis results file missing"))
-    }
+  # Replace {GENE} placeholder with actual gene name
+  primary_gene <- config$research_target$primary_gene %||% config$gene_analysis$primary_gene
+  
+  # Create required data files from pipeline input data
+  if (!is.null(input_data$meta_results) && nrow(input_data$meta_results) > 0) {
+    meta_file <- gsub("\\{GENE\\}", toupper(primary_gene), output_files$meta_results)
+    cat("📄 Creating meta-analysis results file:", meta_file, "\n")
+    write.csv(input_data$meta_results, meta_file, row.names = FALSE)
+  } else {
+    return(list(success = FALSE, reason = "Meta-analysis results data missing from input"))
   }
   
-  # Verify DGE results file  
-  if (!is.null(output_files$dge_results)) {
-    if (!file.exists(output_files$dge_results)) {
-      return(list(success = FALSE, reason = "DGE results file missing"))
-    }
+  # Create DGE results file from individual DGE results data
+  dge_data <- NULL
+  if (!is.null(input_data$dge_results) && nrow(input_data$dge_results) > 0) {
+    dge_data <- input_data$dge_results
+  } else if (!is.null(input_data$individual_results) && nrow(input_data$individual_results) > 0) {
+    dge_data <- input_data$individual_results
+  } else if (!is.null(input_data$dge_summary) && nrow(input_data$dge_summary) > 0) {
+    dge_data <- input_data$dge_summary
   }
   
-  # Verify dataset summary file
-  if (!is.null(output_files$dataset_summary)) {
-    if (!file.exists(output_files$dataset_summary)) {
-      return(list(success = FALSE, reason = "Dataset summary file missing"))
-    }
+  if (!is.null(dge_data)) {
+    dge_file <- gsub("\\{GENE\\}", toupper(primary_gene), output_files$dge_results)
+    cat("📄 Creating DGE results file:", dge_file, "\n")
+    write.csv(dge_data, dge_file, row.names = FALSE)
+  } else {
+    return(list(success = FALSE, reason = "DGE results data missing from input (checked: dge_summary, individual_results, dge_results)"))
   }
   
-  # Ensure output/current/ directory exists with symlinks or copies for RMD compatibility
+  # Create dataset summary file from available data
+  dataset_summary_data <- NULL
+  if (!is.null(input_data$dataset_summary) && nrow(input_data$dataset_summary) > 0) {
+    dataset_summary_data <- input_data$dataset_summary
+  } else if (!is.null(input_data$dge_summary) && nrow(input_data$dge_summary) > 0) {
+    dataset_summary_data <- input_data$dge_summary
+  } else if (!is.null(input_data$analysis_stats$dataset_summary) && nrow(input_data$analysis_stats$dataset_summary) > 0) {
+    dataset_summary_data <- input_data$analysis_stats$dataset_summary
+  }
+  
+  if (!is.null(dataset_summary_data)) {
+    # Create both the configured filename and the template-expected filename
+    summary_file <- output_files$dataset_summary
+    cat("📄 Creating dataset summary file:", summary_file, "\n")
+    write.csv(dataset_summary_data, summary_file, row.names = FALSE)
+    
+    # Also create the file with the name expected by the template
+    template_summary_file <- "output/current/dataset_processing_summary_6_datasets.csv"
+    write.csv(dataset_summary_data, template_summary_file, row.names = FALSE)
+    cat("📄 Created template-compatible dataset summary file:", template_summary_file, "\n")
+  } else {
+    warnings_generated <- c(warnings_generated, "Dataset summary data missing from input")
+  }
+  
+  # Ensure output/current/ directory exists 
   current_dir <- config$paths$output$current %||% "output/current"
   
   if (!dir.exists(current_dir)) {
     dir.create(current_dir, recursive = TRUE)
   }
   
-  # Copy/update files to current directory for RMD template
-  file_mappings <- list(
-    "CAMK_meta_analysis_FINAL.csv" = output_files$meta_results,
-    "CAMK_DGE_all_6_datasets_COMPREHENSIVE.csv" = output_files$dge_results,
-    "dataset_processing_summary_6_datasets.csv" = output_files$dataset_summary
-  )
-  
-  # Check if methodology comparison file exists, create if missing
-  methodology_file <- file.path(current_dir, "methodology_comparison_analysis.csv")
-  if (!file.exists(methodology_file)) {
-    cat("Creating methodology comparison file...\n")
-    # This file is now pre-created, but we'll check just in case
-  }
-  
-  for (target_file in names(file_mappings)) {
-    source_file <- file_mappings[[target_file]]
-    target_path <- file.path(current_dir, target_file)
-    
-    if (!is.null(source_file) && file.exists(source_file)) {
-      if (!file.exists(target_path) || file.mtime(source_file) > file.mtime(target_path)) {
-        file.copy(source_file, target_path, overwrite = TRUE)
-        cat("📄 Updated:", target_file, "\n")
-      }
-    } else {
-      warnings_generated <- c(warnings_generated, paste("Source file missing for", target_file))
-    }
-  }
+  cat("✅ All required data files have been created successfully\n")
   
   return(list(
     success = TRUE,
@@ -299,44 +306,37 @@ generate_html_report <- function(template_file, output_html, config) {
   warnings_generated <- character(0)
   
   tryCatch({
-    # Change to reports directory for rendering (required for relative paths in RMD)
-    original_wd <- getwd()
-    reports_dir <- dirname(template_file)
+    # Convert to absolute paths to avoid working directory issues
+    template_file <- normalizePath(template_file, mustWork = TRUE)
+    output_dir <- dirname(output_html)
+    output_basename <- basename(output_html)
     
-    if (reports_dir != ".") {
-      setwd(reports_dir)
-      template_basename <- basename(template_file)
-      output_basename <- basename(output_html)
-    } else {
-      template_basename <- template_file
-      output_basename <- output_html
+    # Ensure output directory exists
+    if (!dir.exists(output_dir)) {
+      dir.create(output_dir, recursive = TRUE)
     }
     
-    cat("📍 Working directory:", getwd(), "\n")
-    cat("📄 Template:", template_basename, "\n")
-    cat("📄 Output:", output_basename, "\n")
+    output_html <- file.path(normalizePath(output_dir, mustWork = TRUE), output_basename)
     
-    # Render the report
+    cat("📍 Working directory:", getwd(), "\n")
+    cat("📄 Template (absolute):", template_file, "\n")
+    cat("📄 Output (absolute):", output_html, "\n")
+    
+    # Render the report using absolute paths - no working directory change needed
     cat("\n🔄 Rendering report...\n")
     
-    render_result <- rmarkdown::render(
-      input = template_basename,
-      output_file = output_basename,
-      quiet = FALSE  # Show rendering progress
-    )
+    # Suppress warnings during rendering to avoid restart issues
+    render_result <- suppressWarnings({
+      rmarkdown::render(
+        input = template_file,
+        output_file = output_html,
+        quiet = FALSE  # Show rendering progress
+      )
+    })
     
-    # Restore working directory
-    if (reports_dir != ".") {
-      setwd(original_wd)
-      
-      # Move the rendered file to the correct output location
-      rendered_file <- file.path(reports_dir, output_basename)
-      if (file.exists(rendered_file) && rendered_file != output_html) {
-        file.copy(rendered_file, output_html, overwrite = TRUE)
-        cat("📁 Moved report to:", output_html, "\n")
-        # Clean up template directory
-        file.remove(rendered_file)
-      }
+    # Verify the output file was created
+    if (!file.exists(output_html)) {
+      stop("Report file was not created at expected location: ", output_html)
     }
     
     cat("✅ Report rendered successfully to:", output_html, "\n")
@@ -348,20 +348,11 @@ generate_html_report <- function(template_file, output_html, config) {
     ))
     
   }, error = function(e) {
-    # Restore working directory on error
-    if (exists("original_wd") && getwd() != original_wd) {
-      setwd(original_wd)
-    }
-    
     return(list(
       success = FALSE,
       reason = paste("Rendering error:", e$message),
       warnings = warnings_generated
     ))
-    
-  }, warning = function(w) {
-    warnings_generated <<- c(warnings_generated, w$message)
-    invokeRestart("muffleWarning")
   })
 }
 

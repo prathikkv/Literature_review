@@ -37,7 +37,8 @@ discover_geo_datasets <- function(config_file = "config.yml",
   config <- yaml::read_yaml(config_file)
   
   # Extract search parameters
-  diseases <- config$datasets$search_terms %||% 
+  diseases <- config$dynamic_features$search_parameters$diseases %||%
+              config$research_target$diseases %||%
               c("Heart Failure", "Atrial Fibrillation", "Cardiomyopathy")
   
   min_samples <- config$analysis$quality_control$min_samples_per_group %||% 20

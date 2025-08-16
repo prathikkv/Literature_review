@@ -5,6 +5,7 @@
 #' Extracts group detection logic from enhanced_group_detection_corrected.R
 
 source("scripts/utilities/step_interface.R")
+source("scripts/utilities/annotation_mapper.R")
 
 #' Execute Preprocessing Step
 #'
@@ -62,19 +63,24 @@ step_02_preprocessing <- function(step_name, input_data, config, checkpoint_dir 
     if (preprocessing_result$success) {
       processed_datasets[[dataset_id]] <- preprocessing_result$processed_data
       
-      # Add to summary
+      # Add to summary with full template-compatible fields
       preprocessing_summary <- rbind(preprocessing_summary, data.frame(
         Dataset = dataset_id,
         Priority = dataset_config$priority,
         Original_Samples = dataset$n_samples %||% ncol(dataset$expression_matrix),
         Processed_Samples = preprocessing_result$final_sample_count,
+        Samples = preprocessing_result$final_sample_count,  # Template expects "Samples"
         Control_Samples = preprocessing_result$group_counts[["Control"]] %||% 0,
         Disease_Samples = preprocessing_result$group_counts[["Disease"]] %||% 0,
         Total_Genes = nrow(dataset$expression_matrix),
         CAMK_Genes = preprocessing_result$camk_genes_detected,
+        Significant_CAMK = preprocessing_result$camk_genes_detected,  # For template compatibility
         Group_Detection = preprocessing_result$group_detection_method,
         QC_Flags = preprocessing_result$qc_flags %||% 0,
         Status = "SUCCESS",
+        Disease_Type = dataset_config$disease_type %||% "Unknown",
+        Biological_Context = dataset_config$biological_context %||% "Unknown",
+        Platform = dataset_config$platform %||% "Unknown",
         stringsAsFactors = FALSE
       ))
       
@@ -93,19 +99,24 @@ step_02_preprocessing <- function(step_name, input_data, config, checkpoint_dir 
     } else {
       failed_preprocessing <- c(failed_preprocessing, dataset_id)
       
-      # Add failure to summary
+      # Add failure to summary with full template-compatible fields
       preprocessing_summary <- rbind(preprocessing_summary, data.frame(
         Dataset = dataset_id,
         Priority = dataset_config$priority,
         Original_Samples = dataset$n_samples %||% ncol(dataset$expression_matrix),
         Processed_Samples = NA,
+        Samples = NA,
         Control_Samples = NA,
         Disease_Samples = NA,
         Total_Genes = nrow(dataset$expression_matrix),
         CAMK_Genes = NA,
+        Significant_CAMK = NA,
         Group_Detection = "FAILED",
         QC_Flags = NA,
         Status = paste("FAILED:", preprocessing_result$reason),
+        Disease_Type = dataset_config$disease_type %||% "Unknown",
+        Biological_Context = dataset_config$biological_context %||% "Unknown",
+        Platform = dataset_config$platform %||% "Unknown",
         stringsAsFactors = FALSE
       ))
       
@@ -274,6 +285,74 @@ preprocess_single_dataset <- function(dataset_id, dataset, dataset_config, confi
   }
   
   cat("📊 Analysis Matrix:", nrow(expr_filtered), "genes x", ncol(expr_filtered), "samples\n")
+  
+  # CHECK FOR PROBE ID TO GENE SYMBOL MAPPING
+  first_probe_ids <- head(rownames(expr_filtered), 5)
+  cat("🔍 First probe IDs:", paste(first_probe_ids, collapse = ", "), "\n")
+  
+  # Check if we need probe-to-gene mapping (if rownames look like probe IDs)
+  # Detect Affymetrix probe patterns: _at suffix OR numeric-only IDs
+  affymetrix_pattern1 <- all(grepl("_at$|_s_at$|_x_at$", first_probe_ids))
+  affymetrix_pattern2 <- all(grepl("^[0-9]+$", first_probe_ids))  # Pure numeric IDs
+  
+  if (affymetrix_pattern1 || affymetrix_pattern2) {
+    
+    cat("🧬 PROBE TO GENE SYMBOL MAPPING REQUIRED\n")
+    cat("═══════════════════════════════════════════════════════════════\n")
+    
+    # Load GPL570 annotation
+    tryCatch({
+      annotation_df <- load_gpl570_annotation()
+      
+      # Map probes to genes
+      expr_genes <- map_probes_to_genes(expr_filtered, annotation_df, method = "mean")
+      
+      # Update expression matrix
+      expr_filtered <- expr_genes
+      
+      cat("✅ PROBE MAPPING COMPLETED\n")
+      cat("📊 Updated Matrix:", nrow(expr_filtered), "genes x", ncol(expr_filtered), "samples\n")
+      
+    }, error = function(e) {
+      cat("⚠️  PROBE MAPPING FAILED:", e$message, "\n")
+      cat("⚠️  Continuing with probe IDs (CAMK genes may not be detected)\n")
+      warnings_generated <<- c(warnings_generated, paste("Probe mapping failed:", e$message))
+    })
+    
+    cat("═══════════════════════════════════════════════════════════════\n")
+  } else {
+    # Check if these might be gene symbols by looking for typical gene patterns
+    gene_like_pattern <- any(grepl("^[A-Z][A-Z0-9]*[0-9]*[A-Z]*$", first_probe_ids[1:3]))
+    
+    if (gene_like_pattern) {
+      cat("✅ Gene symbols detected - no probe mapping needed\n")
+    } else {
+      cat("🔍 Unrecognized probe format - attempting mapping anyway\n")
+      cat("═══════════════════════════════════════════════════════════════\n")
+      
+      # Try mapping anyway - let annotation mapper handle missing mappings
+      tryCatch({
+        annotation_df <- load_gpl570_annotation()
+        expr_genes <- map_probes_to_genes(expr_filtered, annotation_df, method = "mean")
+        
+        # Only update if mapping actually found genes
+        if (nrow(expr_genes) > 0) {
+          expr_filtered <- expr_genes
+          cat("✅ SOME PROBE MAPPING COMPLETED\n")
+          cat("📊 Updated Matrix:", nrow(expr_filtered), "genes x", ncol(expr_filtered), "samples\n")
+        } else {
+          cat("⚠️  NO PROBE MAPPINGS FOUND - keeping original data\n")
+        }
+        
+      }, error = function(e) {
+        cat("⚠️  PROBE MAPPING FAILED:", e$message, "\n")
+        cat("⚠️  Continuing with original probe IDs\n")
+        warnings_generated <<- c(warnings_generated, paste("Probe mapping failed:", e$message))
+      })
+      
+      cat("═══════════════════════════════════════════════════════════════\n")
+    }
+  }
   
   # CAMK genes detection
   camk_genes <- config$genes$camk_core_genes

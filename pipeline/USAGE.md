@@ -2,22 +2,17 @@
 
 ## 🚀 One-Command Execution
 
-### **Test the Pipeline (30 seconds)**
-```bash
-Rscript run_pipeline_complete.R --demo
-```
-
-### **Run Real Analysis (2-3 minutes)**
+### **Quick Analysis (2-3 minutes) - RECOMMENDED**
 ```bash
 Rscript run_pipeline_complete.R --quick
 ```
 
-### **Complete Analysis (5 minutes)**
+### **Standard Analysis (5 minutes)**
 ```bash
 Rscript run_pipeline_complete.R
 ```
 
-### **Full Features (10+ minutes)**
+### **Full Analysis with All Features (10+ minutes)**
 ```bash
 Rscript run_pipeline_complete.R --full
 ```
@@ -47,13 +42,13 @@ After execution, open these files in your browser:
 
 **If pipeline doesn't start:**
 ```bash
-# Test with demo first
-Rscript run_pipeline_complete.R --demo
+# Use quick mode first (fastest real analysis)
+Rscript run_pipeline_complete.R --quick
 ```
 
 **If takes too long:**
 ```bash
-# Use quick mode (skips slow features)
+# Quick mode skips enhanced features for speed
 Rscript run_pipeline_complete.R --quick
 ```
 

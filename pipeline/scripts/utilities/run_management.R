@@ -148,9 +148,11 @@ create_run_directory <- function(base_output_dir = "output",
     }
     
     # Create symlink (works on Unix-like systems)
+    # Use relative path to avoid broken links
+    relative_target <- file.path("runs", run_id)
     tryCatch({
-      file.symlink(dirs$current_run, dirs$current_symlink)
-      cat("🔗 Created symlink: current ->", run_id, "\n")
+      file.symlink(relative_target, dirs$current_symlink)
+      cat("🔗 Created symlink: current ->", relative_target, "\n")
     }, error = function(e) {
       # Fallback: copy directory if symlink fails
       cat("⚠️  Symlink failed, creating copy instead\n")
@@ -366,13 +368,13 @@ update_output_paths_in_config <- function(config, run_dirs, primary_gene, diseas
   )
   
   # Update paths in config
-  config$paths$reports$output_html <- file.path(run_dirs$current_run, report_filename)
-  config$paths$reports$template <- "templates/CAMK_Analysis_Report.Rmd"
+  config$paths$reports$analysis_report$output_html <- file.path(run_dirs$current_run, report_filename)
+  # Don't override template - keep what's in config
+  # config$paths$reports$analysis_report$template is already set in config.yml
   
-  # Update other output paths
-  config$paths$output_files$meta_results <- file.path(run_dirs$data, "meta_analysis_results.csv")
-  config$paths$output_files$dge_results <- file.path(run_dirs$data, "dge_results.csv")
-  config$paths$output_files$dataset_summary <- file.path(run_dirs$data, "dataset_summary.csv")
+  # Don't update output paths - they should point to output/current where files are actually saved
+  # The meta-analysis step saves to output/current, not to the run directory
+  # config$paths$output_files paths remain as configured
   
   return(config)
 }

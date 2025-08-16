@@ -52,6 +52,13 @@ if (!file.exists(config_file)) {
 config <- yaml::read_yaml(config_file)
 cat("⚙️  Loaded pipeline configuration:", config$pipeline$name, "\n\n")
 
+# NULL coalescing operator
+`%||%` <- function(x, y) if (is.null(x)) y else x
+
+# Extract primary gene for dynamic path resolution
+primary_gene <- config$research_target$primary_gene %||% "CAMK2D"
+cat("🎯 Primary gene:", primary_gene, "\n\n")
+
 # ═══════════════════════════════════════════════════════════════
 # VALIDATION FUNCTIONS
 # ═══════════════════════════════════════════════════════════════
@@ -149,7 +156,7 @@ cat("🧬 STEP 2: Meta-Analysis Results Validation\n")
 cat("─────────────────────────────────────────────────────────────\n")
 
 # Load meta-analysis results if available
-meta_file <- config$paths$output_files$meta_results
+meta_file <- gsub("\\{GENE\\}", primary_gene, config$paths$output_files$meta_results)
 meta_validations <- list()
 
 if (file.exists(meta_file)) {
@@ -177,14 +184,14 @@ if (file.exists(meta_file)) {
       
       # P-value validation  
       pvalue_comparison <- compare_numeric(
-        actual = camk2d_row$Combined_p_value[1],
+        actual = camk2d_row$Combined_P_Value[1],
         expected = baseline$baseline$camk2d_results$combined_p_value,
         tolerance = baseline$tolerances$p_value_absolute,
         name = "CAMK2D_p_value"
       )
       
       # Significance validation
-      is_significant <- camk2d_row$Combined_p_value[1] < 0.05
+      is_significant <- camk2d_row$Combined_P_Value[1] < 0.05
       significance_match <- is_significant == baseline$baseline$camk2d_results$is_significant
       
       meta_validations$camk2d_logfc <- logfc_comparison
@@ -223,7 +230,7 @@ if (file.exists(meta_file)) {
     }
     
     # Validate significant genes count
-    significant_count <- sum(meta_results$Combined_p_value < 0.05, na.rm = TRUE)
+    significant_count <- sum(meta_results$Combined_P_Value < 0.05, na.rm = TRUE)
     expected_significant <- baseline$baseline$camk_gene_results$significant_genes
     
     significant_comparison <- list(
@@ -431,6 +438,3 @@ if (interactive()) {
 } else {
   quit(save = "no", status = exit_code)
 }
-
-# NULL coalescing operator
-`%||%` <- function(x, y) if (is.null(x)) y else x

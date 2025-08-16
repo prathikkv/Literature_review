@@ -126,24 +126,18 @@ load_and_validate_config <- function(config_file = "config.yml", strict_mode = T
   if (is.null(config$genes)) {
     validation_report$errors <- c(validation_report$errors, "❌ Missing 'genes' section")
   } else {
-    # Validate CAMK genes
-    if (is.null(config$genes$camk_core_genes)) {
-      validation_report$errors <- c(validation_report$errors, "❌ Missing CAMK core genes list")
+    # Validate gene family 
+    if (is.null(config$genes$core_gene_family)) {
+      validation_report$errors <- c(validation_report$errors, "❌ Missing core gene family list")
     } else {
-      expected_camk_genes <- c("CAMK2D", "CAMK2A", "CAMK2B", "CAMK2G", "CAMKK1", "CAMKK2", 
-                              "CAMK1", "CAMK1D", "CAMK1G", "CAMK4", "CAMKV")
+      primary_gene <- config$research_target$primary_gene
       
-      missing_genes <- setdiff(expected_camk_genes, config$genes$camk_core_genes)
-      if (length(missing_genes) > 0) {
+      if (!is.null(primary_gene) && !primary_gene %in% config$genes$core_gene_family) {
         validation_report$warnings <- c(validation_report$warnings, 
-                                       paste("⚠️  Missing expected CAMK genes:", paste(missing_genes, collapse = ", ")))
+                                       paste("⚠️  Primary gene", primary_gene, "not in core gene family list"))
       }
       
-      if (!"CAMK2D" %in% config$genes$camk_core_genes) {
-        validation_report$errors <- c(validation_report$errors, "❌ Primary gene CAMK2D not in core genes list")
-      }
-      
-      validation_report$info <- c(validation_report$info, paste("✅", length(config$genes$camk_core_genes), "CAMK genes configured"))
+      validation_report$info <- c(validation_report$info, paste("✅", length(config$genes$core_gene_family), "genes in family configured"))
     }
     
     # Validate minimum gene thresholds
@@ -321,8 +315,8 @@ print_config_summary <- function(config) {
     cat("High priority datasets:", high_priority, "\n")
   }
   
-  if (!is.null(config$genes$camk_core_genes)) {
-    cat("CAMK genes:", length(config$genes$camk_core_genes), "\n")
+  if (!is.null(config$genes$core_gene_family)) {
+    cat("Gene family size:", length(config$genes$core_gene_family), "\n")
   }
   
   if (!is.null(config$analysis$differential_expression$fdr_threshold)) {

@@ -29,21 +29,11 @@ Rscript run_pipeline_complete.R --quick
 
 | Mode | Command | Time | Description | Use Case |
 |------|---------|------|-------------|----------|
-| **Demo** | `--demo` | 30 sec | Sample data, all steps | Testing/Validation |
 | **Quick** | `--quick` | 2-3 min | Core analysis only | Production |
-| **Standard** | *(default)* | 5 min | Core + essential features | Balanced |
+| **Standard** | *(default)* | 5 min | Core + gene family discovery | Balanced |
 | **Full** | `--full` | 10+ min | All features enabled | Research |
 
 ### Mode Details
-
-#### 🎬 Demo Mode
-```bash
-Rscript run_pipeline_complete.R --demo
-```
-- Uses subset of data for rapid execution
-- Shows complete workflow with progress bars
-- Generates both HTML reports
-- Perfect for testing pipeline functionality
 
 #### ⚡ Quick Mode (RECOMMENDED)
 ```bash
@@ -59,7 +49,7 @@ Rscript run_pipeline_complete.R --quick
 Rscript run_pipeline_complete.R
 ```
 - Complete core analysis
-- Includes gene family discovery (limited)
+- Includes gene family discovery
 - Balanced feature set
 - Good for comprehensive reports
 
@@ -67,9 +57,10 @@ Rscript run_pipeline_complete.R
 ```bash
 Rscript run_pipeline_complete.R --full
 ```
-- All features enabled
+- All features enabled  
 - Complete gene family discovery
-- Dataset discovery and pathway analysis
+- Enhanced pathway analysis
+- Literature mining and drug target prediction
 - Maximum insight generation
 
 ## 📁 Pipeline Structure
@@ -195,12 +186,12 @@ The pipeline behavior is controlled by `config.yml`:
 - Check `output/logs/` for error details
 - Ensure RMarkdown is properly installed
 
-### Demo mode for quick testing
-If experiencing issues, test with demo mode first:
+### Quick mode for testing
+If experiencing issues, start with quick mode:
 ```bash
-Rscript run_pipeline_complete.R --demo
+Rscript run_pipeline_complete.R --quick
 ```
-This completes in 30 seconds and validates the entire workflow.
+This completes in 2-3 minutes with full real analysis but minimal features.
 
 ## 📊 Expected Results
 
@@ -223,8 +214,8 @@ If using this pipeline, please cite:
 
 ## 💡 Tips for Best Performance
 
-1. **First time**: Run demo mode to verify setup
-2. **Regular use**: Use quick mode (2-3 min)
+1. **First time**: Use quick mode to verify setup (2-3 min)
+2. **Regular use**: Use quick mode for routine analysis
 3. **Research**: Use standard or full mode for comprehensive analysis
 4. **Debugging**: Check output/logs/ for detailed execution logs
 5. **Validation**: Compare with validation/baseline_results.yml

@@ -43,7 +43,7 @@ step_04_meta_analysis <- function(step_name, input_data, config, checkpoint_dir 
   # Get meta-analysis configuration
   meta_config <- config$analysis$meta_analysis
   quality_filters <- meta_config$quality_filters
-  camk_genes <- config$genes$camk_core_genes
+  target_genes <- config$gene_analysis$gene_family
   
   cat("📋 META-ANALYSIS CONFIGURATION:\n")
   cat("Method:", meta_config$method %||% "fixed_effects", "\n")
@@ -55,7 +55,7 @@ step_04_meta_analysis <- function(step_name, input_data, config, checkpoint_dir 
   cat("📊 INPUT DATA SUMMARY:\n")
   cat("Total DGE results:", nrow(dge_results), "\n")
   cat("Datasets analyzed:", analysis_stats$total_datasets_analyzed, "\n")
-  cat("Genes to consider:", length(camk_genes), "\n\n")
+  cat("Genes to consider:", length(target_genes), "\n\n")
   
   # Apply quality filters
   cat("🔍 APPLYING QUALITY FILTERS:\n")
@@ -174,23 +174,24 @@ step_04_meta_analysis <- function(step_name, input_data, config, checkpoint_dir 
     cat("Meta-analysis warnings:", length(meta_warnings), "\n")
   }
   
-  # CAMK2D spotlight
-  camk2d_results <- final_results[final_results$Gene == "CAMK2D", ]
-  if (nrow(camk2d_results) > 0) {
-    cat("\n⭐ CAMK2D META-ANALYSIS RESULTS:\n")
+  # Primary gene spotlight
+  primary_gene <- config$research_target$primary_gene
+  primary_gene_results <- final_results[final_results$Gene == primary_gene, ]
+  if (nrow(primary_gene_results) > 0) {
+    cat("\n⭐", toupper(primary_gene), "META-ANALYSIS RESULTS:\n")
     cat("═══════════════════════════════════════════════════════════════\n")
     
-    camk2d <- camk2d_results[1, ]
+    primary_data <- primary_gene_results[1, ]
     cat(sprintf("Combined logFC: %.4f (95%% CI: %.4f to %.4f)\n",
-                camk2d$Combined_logFC, camk2d$CI_Lower, camk2d$CI_Upper))
-    cat(sprintf("P-value: %.2e\n", camk2d$Combined_P_Value))
-    cat(sprintf("Significant: %s\n", if (camk2d$Significant) "YES ✅" else "NO"))
-    cat(sprintf("Direction: %s\n", camk2d$Regulation))
-    cat(sprintf("Datasets included: %s\n", camk2d$Datasets))
-    cat(sprintf("Individual logFC values: %s\n", camk2d$Individual_logFC))
+                primary_data$Combined_logFC, primary_data$CI_Lower, primary_data$CI_Upper))
+    cat(sprintf("P-value: %.2e\n", primary_data$Combined_P_Value))
+    cat(sprintf("Significant: %s\n", if (primary_data$Significant) "YES ✅" else "NO"))
+    cat(sprintf("Direction: %s\n", primary_data$Regulation))
+    cat(sprintf("Datasets included: %s\n", primary_data$Datasets))
+    cat(sprintf("Individual logFC values: %s\n", primary_data$Individual_logFC))
     
-    if (camk2d$Heterogeneity_I2 > 0) {
-      cat(sprintf("Heterogeneity (I²): %.1f%% (p = %.3f)\n", camk2d$Heterogeneity_I2, camk2d$Heterogeneity_P))
+    if (primary_data$Heterogeneity_I2 > 0) {
+      cat(sprintf("Heterogeneity (I²): %.1f%% (p = %.3f)\n", primary_data$Heterogeneity_I2, primary_data$Heterogeneity_P))
     }
   }
   
@@ -217,38 +218,39 @@ step_04_meta_analysis <- function(step_name, input_data, config, checkpoint_dir 
   validation_passed <- TRUE
   validation_messages <- character(0)
   
-  if (!is.null(validation_config) && validation_config$enabled && nrow(camk2d_results) > 0) {
+  if (!is.null(validation_config) && validation_config$enabled && nrow(primary_gene_results) > 0) {
     cat("\n🔍 BASELINE VALIDATION:\n")
     cat("═══════════════════════════════════════════════════════════════\n")
     
     baseline <- validation_config$baseline_results
     tolerances <- config$validation$tolerances
     
-    # Check CAMK2D logFC
-    if (!is.null(baseline$camk2d_combined_logfc)) {
-      logfc_diff <- abs(camk2d$Combined_logFC - baseline$camk2d_combined_logfc)
+    # Check primary gene logFC
+    primary_gene_lower <- tolower(primary_gene)
+    if (!is.null(baseline[[paste0(primary_gene_lower, "_combined_logfc")]])) {
+      logfc_diff <- abs(primary_data$Combined_logFC - baseline[[paste0(primary_gene_lower, "_combined_logfc")]])
       logfc_tolerance <- tolerances$logfc_tolerance %||% 1e-4
       
       if (logfc_diff <= logfc_tolerance) {
-        cat("✅ CAMK2D logFC matches baseline (diff =", sprintf("%.6f", logfc_diff), ")\n")
+        cat("✅", primary_gene, "logFC matches baseline (diff =", sprintf("%.6f", logfc_diff), ")\n")
       } else {
         validation_passed <- FALSE
-        msg <- paste("CAMK2D logFC differs from baseline:", sprintf("%.6f", logfc_diff), "> tolerance:", logfc_tolerance)
+        msg <- paste(primary_gene, "logFC differs from baseline:", sprintf("%.6f", logfc_diff), "> tolerance:", logfc_tolerance)
         validation_messages <- c(validation_messages, msg)
         cat("❌", msg, "\n")
       }
     }
     
-    # Check CAMK2D p-value
-    if (!is.null(baseline$camk2d_p_value)) {
-      pval_diff <- abs(camk2d$Combined_P_Value - baseline$camk2d_p_value)
+    # Check primary gene p-value
+    if (!is.null(baseline[[paste0(primary_gene_lower, "_p_value")]])) {
+      pval_diff <- abs(primary_data$Combined_P_Value - baseline[[paste0(primary_gene_lower, "_p_value")]])
       pval_tolerance <- tolerances$p_value_tolerance %||% 1e-6
       
       if (pval_diff <= pval_tolerance) {
-        cat("✅ CAMK2D p-value matches baseline (diff =", sprintf("%.2e", pval_diff), ")\n")
+        cat("✅", primary_gene, "p-value matches baseline (diff =", sprintf("%.2e", pval_diff), ")\n")
       } else {
         validation_passed <- FALSE
-        msg <- paste("CAMK2D p-value differs from baseline:", sprintf("%.2e", pval_diff), "> tolerance:", pval_tolerance)
+        msg <- paste(primary_gene, "p-value differs from baseline:", sprintf("%.2e", pval_diff), "> tolerance:", pval_tolerance)
         validation_messages <- c(validation_messages, msg)
         cat("❌", msg, "\n")
       }
@@ -294,10 +296,11 @@ step_04_meta_analysis <- function(step_name, input_data, config, checkpoint_dir 
       genes_analyzed = genes_analyzed,
       significant_genes = significant_genes,
       significance_threshold = significance_threshold,
-      camk2d_significant = nrow(camk2d_results) > 0 && camk2d_results$Significant[1],
+      primary_gene_significant = nrow(primary_gene_results) > 0 && primary_gene_results$Significant[1],
       baseline_validation_passed = validation_passed
     ),
-    dge_summary = dge_summary,
+    dge_results = dge_results,  # Pass through individual gene results for reporting
+    dge_summary = dge_summary,  # Pass through dataset summary for reporting
     analysis_stats = analysis_stats,
     quality_filtering = list(
       original_results = nrow(dge_results),
@@ -305,6 +308,32 @@ step_04_meta_analysis <- function(step_name, input_data, config, checkpoint_dir 
       genes_with_sufficient_data = length(genes_multi_dataset)
     )
   )
+  
+  # SAVE OUTPUT FILES
+  cat("\n💾 SAVING OUTPUT FILES:\n")
+  
+  # Ensure output directory exists
+  output_dir <- "output/current"
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+    cat("📁 Created directory:", output_dir, "\n")
+  }
+  
+  # Save meta-analysis results with dynamic filename
+  primary_gene_upper <- toupper(primary_gene)
+  meta_csv_path <- paste0("output/current/", primary_gene_upper, "_meta_analysis_FINAL.csv")
+  write.csv(meta_results, meta_csv_path, row.names = FALSE)
+  cat("✅ Meta-analysis results saved:", meta_csv_path, "\n")
+  
+  # Save DGE summary with dynamic filename
+  dge_csv_path <- paste0("output/current/", primary_gene_upper, "_DGE_all_datasets_COMPREHENSIVE.csv")
+  write.csv(dge_results, dge_csv_path, row.names = FALSE)
+  cat("✅ DGE results saved:", dge_csv_path, "\n")
+  
+  # Save dataset summary
+  dataset_csv_path <- "output/current/dataset_processing_summary_6_datasets.csv"
+  write.csv(dge_summary, dataset_csv_path, row.names = FALSE)
+  cat("✅ Dataset summary saved:", dataset_csv_path, "\n")
   
   # Validate output
   validate_step_output(
@@ -325,7 +354,7 @@ step_04_meta_analysis <- function(step_name, input_data, config, checkpoint_dir 
     metadata = list(
       genes_analyzed = genes_analyzed,
       significant_genes = significant_genes,
-      camk2d_significant = nrow(camk2d_results) > 0 && camk2d_results$Significant[1],
+      primary_gene_significant = nrow(primary_gene_results) > 0 && primary_gene_results$Significant[1],
       validation_passed = validation_passed
     )
   ))
